@@ -1,0 +1,770 @@
+<h2>Chapter 3</h2>
+<p>
+  This chapter covers many basic computer science concepts, but in the context 
+  of Rust.
+</p>
+
+<h2>Variables</h2>
+<p>
+  Declaring variables in Rust requires type annotations in most cases. Some
+  values have default types, like an integer having a default i32 type, in case 
+  no type is defined. It is possible to assign an expression to a value also, 
+  including code blocks. You do this the same way as returning a value from a 
+  function, which is to omit the semi colon on the last line of the expression.
+</p>
+
+<pre><code class="language-rust">let x: i32 = {
+    let a: i32 = 12;
+    let b: i32 = 10;
+    a + b
+};
+</code></pre>
+
+<h2>Mutability</h2>
+<p>
+  All variables in Rust are immutable by default. If you want a variable to be 
+  mutable, you must explicitly state so using the 
+  <code class="inline-code language-rust">mut</code> keyword:
+<pre><code class="language-rust">let mut x: u8 = 10;
+mut += 5;
+</code></pre>
+  Without the mut keyword, the code above wouldn't compile. Even though values
+  in Rust are immutable by default, you can still declare a value and assign a 
+  value to it on a later line.
+
+<pre><code class="language-rust">let x;
+let cond: bool = false;
+if cond { x = 1; } else  { x = 2; }
+println!("X: {}", x);
+x = 3; // THIS LINE WON'T COMPILE, x HAS BEEN ASSIGNED ALREADY
+</code></pre>
+  Even though <code class="inline-code">x</code> was declared as immutable, no 
+  value was assigned right away, so we can still assign a value later on.
+</p>
+
+<h2>Constants</h2>
+<p>
+  Constants are similar to immutable variables, except constants are known are
+  known at <i>compile-time</i> where immutable variables are known at 
+  <i>run-time</i>. You cannot use the 
+  <code class="inline-code language-rust">mut</code> keyword with a constant. 
+  Stylistically, constants should be declared with names in all caps. 
+  Constants also require a type annotation, there is no default type such as 
+  <strong>i32</strong> for integer variables.
+</p>
+<pre><code class="language-rust">let x;
+const Y: i32 = 9000;
+</code></pre>
+
+<h2>Scope</h2>
+<p>
+  Declared variables are accessible in a lower scope, but variables declared
+  in the lower scope are discarded at the end of the next code block, and no 
+  longer accessible.
+</p>
+<pre><code class="language-rust">let outer_scope: &ampstr = &ampString::from("OUTER SCOPE");
+let recipient: String;
+let border: &ampstr = &ampString::from("\n  --------------------");
+{
+    recipient = String::from("INNER SCOPE");
+    let inner_scope: &ampstr = &amprecipient;
+    println!("\n  TO:   {}{}\n    {}\n    -- {}\n {}", 
+        outer_scope, 
+        border,
+        String::from("Happy birthday"), 
+        inner_scope, 
+        border
+    );
+}
+// 'inner_scope' is no longer accessible from here, but since we 
+// modified 'recipient', we can return a message to the original sender.
+println!("\n  TO:   {}{}\n    {}\n    -- {}\n {}", 
+    recipient, 
+    border, 
+    String::from("Thank you"), 
+    outer_scope, 
+    border . 
+);
+</code></pre>
+
+<h3>Scalar Types and Primitive Types</h3>
+<p>
+A scalar type represents a single value. Rust has four primary scalar types: 
+integers, floating-point numbers, Booleans, and characters. Before diving
+into types, it's worth mentioning that values can sometimes be type cast
+on assignment just by giving a type annotation.
+</p>
+
+<pre><code class="language-rust">let life: u8 = "42".trim().parse().expect("Not a number");
+</code></pre>
+
+<p>
+  You can write long chains like the example above on multiple lines, like this:
+</p>
+
+<pre><code class="language-rust">let life: u8 = "42"
+    .trim()
+    .parse()
+    .expect("Not a number");
+</code></pre>
+
+<h4>Integers</h4>
+<p>
+  Rust has signed (+ and -) and unsigned (+ only) integer types of different 
+  sizes:
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Length</th><th>Signed</th><th>Unsigned</th>
+    </tr> 
+  </thead>
+  <tbody>
+    <tr>
+      <td>8-bit</td><td>i8</td><td>u8</td>
+    </tr>
+    <tr>
+      <td>16-bit</td><td>i16</td><td>u16</td>
+    </tr>
+    <tr>
+      <td>32-bit</td><td>i32</td><td>u32</td>
+    </tr>
+    <tr>
+      <td>64-bit</td><td>i64</td><td>u64</td>
+    </tr>
+    <tr>
+      <td>128-bit</td><td>i128</td><td>u128</td>
+    </tr>
+    <tr>
+      <td>arch</td><td>isize</td><td>usize</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+  Integer types can be declared like so:
+<pre><code class="language-rust">let x: i32 = -42;
+let y: u8 = 64;
+</code></pre>
+</p>
+
+<h4>Floating point values</h4>
+<p>
+  Floating point values are declared as f32 and f64
+</p>
+
+<pre><code class="language-rust">let small: f32 = 3.14;
+let large: f64 = 1.23424987234;
+</code></pre>
+
+<p>
+  Number literals can be represented in other formats by writing them as
+  they appear in the table below.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Number literals</th><th>Example</th>
+    </tr> 
+  </thead>
+  <tbody>
+    <tr>
+      <td>Decimal</td><td>98_222</td>
+    </tr>
+    <tr>
+      <td>Hex</td><td>0xff</td>
+    </tr>
+    <tr>
+      <td>Octal</td><td>0o77</td>
+    </tr>
+    <tr>
+      <td>Binary</td><td>0b1111_0000</td>
+    </tr>
+    <tr>
+      <td>Byte (u8 only)</td><td>b'A'</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Booleans</h4>
+<p>
+  Not much needs to be said here
+</p>
+
+<pre><code class="language-rust">let little_said: bool = true; 
+</code></pre>
+
+<h4>Characters</h4>
+<p>
+  Character types are quite simple compared to strings in Rust. They
+  <strong>must</strong> be declared with single quotes. 
+  <code class="inline-code">'a'</code> is valid, but 
+  <code class="inline-code">"a"</code> is not, because
+  <code class="inline-code">"a"</code> is a <i>String literal</i>
+</p>
+
+<pre><code class="language-rust">let initial: char = 'D'; 
+println!("  My initials start with {}", initial);
+</code></pre>
+
+<p>
+  Note that we specify char literals with single quotes, as opposed to string 
+  literals, which use double quotes. Rust’s char type is four bytes in size and 
+  represents a Unicode Scalar Value, which means it can represent a lot more 
+  than just ASCII. Accented letters; Chinese, Japanese, and Korean characters; 
+  emoji; and zero-width spaces are all valid char values in Rust. Unicode
+  Scalar Values range from 
+  <code class="inline-code">U+0000</code> to 
+  <code class="inline-code">U+D7FF</code> and 
+  <code class="inline-code">U+E000</code> to 
+  <code class="inline-code">U+10FFFF</code> 
+  inclusive. 
+</p>
+
+<h4>Mutable</h4>
+<p>
+  All data types are <i>immutable</i> by default, in Rust. You must use the 
+  <code class="inline-code language-rust">mut</code> keyword when declaring a 
+  variable in order to make it a mutable value.
+</p>
+
+
+<pre><code class="language-rust">let mut day_of_week: String = String::from("Tuesday");
+day_of_week = String::from("Wednesday");
+</code></pre>
+
+<h3>Compound Types</h3>
+<p>
+  Compound types can group multiple values into one type. Rust has two primitive
+  compound types: tuples and arrays.
+</p>
+
+<h4>Arrays</h4>
+<p>
+  Arrays in rust are homogenous, and have a fixed lengths. All elements of the 
+  array must be of the same type. When an array is declared with annotations, 
+  you must pass 2 parameters into the annotation. The first one is the 
+  <i>data type</i>, and the second one is the length of the array.
+</p>
+
+<pre><code class="language-rust">// Integer array
+let num_arr: [i32; 5] = [1, 2, 3, 4, 5];
+println!("Some numbers: {:?}", num_arr);
+
+// String array
+let fruit: [&ampstr; 3] =  ["Apple", "Banana", "Orange"];
+println!("Some fruit: {:?}", fruit); 
+println!("I like {}s, but can't stand {}s", fruit[2], fruit[0]);
+</code></pre>
+
+<p>
+  You can also initialize an array to contain the same value for each element 
+  by specifying the initial value, followed by a semicolon, and then the length
+  of the array in square brackets, as shown here:
+</p>
+
+<pre><code class="language-rust">let a = [3; 5];
+</code></pre>
+
+<p>
+  Arrays are only useful when the length of the array is known. They can offer
+  a performance increase since they're stack-allocated. If you need something
+  that isn't fixed-length, then you may need to look at the heap-allocated
+  type, Vector.
+</p>
+
+<h4>Tuples</h4> 
+<p>
+  Tuples in rust are declared with (), and can be of mixed types. A tuple is a 
+  general way of grouping together a number of values with a variety of types 
+  into one compound type. Tuples have a fixed length: once declared, they 
+  cannot grow or shrink in size.
+
+  The tuple without any values has a special name, known as 
+  <strong>unit</strong>. This value and its corresponding type are both written
+  () and represent an empty value or an empty return type. Expressions 
+  implicitly return the unit value if they don’t return any other value.
+  
+  We create a tuple by writing a comma-separated list of values inside 
+  parentheses. Each position in the tuple has a type, and the types of the 
+  different values in the tuple don’t have to be the same. We’ve added optional 
+  type annotations in this example: 
+</p>
+
+<pre><code class="language-rust">let a = [3; 5];
+let vals: (String, u8, f32) = ("D-Pad", 34, 5.8);
+</code></pre>
+
+<p>
+  Type elements can be access with the dot operator and a numerical value. 
+  Weird syntax, honestly. 
+</p>
+
+<pre><code class="language-rust">let name: String = vals.0;
+let age: u8: vals.1;
+let bmi: f64 = vals.2;
+</code></pre>
+
+<p>
+  Here's a more verbose example...
+</p>
+
+<pre><code class="language-rust">let biped_1 = ("Alice", 30, false);
+let biped_2: (String, i32, bool) = ("Zorb".to_string(), 184, true);
+
+println!("  Human: {:?}\n  Alien: {:?}", biped_1, biped_2);
+if biped_2.2 != biped_1.2 {
+    println!("  {} was abducted by {}", biped_1.0, biped_2.0);
+} else {
+    println!("  {} and {} are good pals.", biped_1.0, biped_2.0);
+}
+</code></pre>
+
+<p>
+  Any data type can be stored in a tuple, including other complex types 
+  like arrays.
+</p>
+
+<pre><code class="language-rust">// A 2D structure of arrays in a tuple  
+let two_dee: ([&ampstr; 3], [u8; 3]) = (
+    ["D-Pad", "Chase", "Steve"], 
+    [13, 21, 34]
+);
+println!("  2D structure: {:?}", two_dee);
+</code></pre>
+
+<p>
+  To get the individual values out of a tuple, we can use pattern matching to 
+  destructure a tuple value, like this:
+</p>
+
+<pre><code class="language-rust">let tup = (500, 6.4, 1);
+let (x, y, z) = tup;
+println!("The value of y is: {y}");
+</code></pre>
+
+<p>
+  Additionally, we can modify individual elements of a mutable tuple. 
+  For example:
+</p>
+
+<pre><code class="language-rust">let mut x: (i32, i32) = (1, 2);
+x.0 = 0;
+x.1 += 5;
+</code></pre>
+
+<h4>Slices</h4>
+<p>
+  Slices are a dynamically sliced view, of a contiguous sequence of 
+  elements. A 'contiguous sequence' refers to a series of elements 
+  placed together in a continuous order without any gaps in between. 
+  It is a pattern used to organize data where elements are stored 
+  consecutively in memory.
+</p>
+
+<pre><code class="language-rust">// Array slices are declared the same way 
+// as a string slice (&ampstr)
+let my_slice: &amp[i32] = &amp[1, 2, 3, 4, 5];
+let animals: &amp[&ampstr] = &amp["Lion", "Elephant"];
+let books: &amp[&ampString] = &amp[
+    &amp"Harry Potter".to_string(), 
+    &amp"Outsiders".to_string()
+];
+</code></pre>
+
+<h4>String types</h4>
+<p>
+  There are two types of strings in Rust. One of them is modifiable in all of 
+  the ways that you'd expect a string to behave in high-level languages like 
+  Python and Javascript, while the other is more like a constant string with 
+  a fixed size. 
+</p>
+
+<p>
+  Using the <code class="inline-code language-rust">str</code> type as a 
+  <code class="inline-code language-rust">String</code> reference is so common,
+  that you will often see people refer to 
+  <code class="inline-code language-rust">String</code> and 
+  <code class="inline-code language-rust">&ampstr</code> as the two string 
+  types in Rust, when in reality, both strings types can be referenced (
+  <code class="inline-code language-rust">&ampString</code> and 
+  <code class="inline-code language-rust">&ampstr</code>). When you make a 
+  reference with <code class="inline-code language-rust">&ampString</code>, 
+  you're taking a reference to the regular String type, which retains all of 
+  the attributes of <code class="inline-code language-rust">String</code> 
+  even though the reference is immutable. This is why it makes more sense to 
+  just use <code class="inline-code language-rust">&ampstr</code> when 
+  referencing strings, as the 
+  <code class="inline-code language-rust">str</code> is much more light-weight.
+</p>
+
+<p>
+  The two types can be used interchangeably.
+</p>
+
+<pre><code class="language-rust">fn log_this(msg: &ampstr) {
+    println!("Message: {}", msg);
+}
+
+fn main() {
+    let err_message: String = String::from("ERROR: Oh no!");
+    log_this(&amperr_message);
+}
+</code></pre>
+
+<p>
+  Notice how the string was declared as type
+  <code class="inline-code language-rust">String</code>, but it was passed into 
+  a function that requires type 
+  <code class="inline-code language-rust">&ampstr</code>, as 
+  <code class="inline-code language-rust">&amperr_message</code>. The Rust 
+  compiler knows what you mean and allows this to happen. In general, it's 
+  best to use <strong>&ampstr</strong> over <strong>&ampString</strong> as 
+  function argumentsbecause <strong>&ampstr</strong> is lighter.
+</p>
+
+<h4>String</h4>
+<p>
+  Strings are mutable, growable, owned string types that are 
+  <strong>heap-allocated</strong>.
+  Being heap allocated is what makes them more flexible, at the cost of 
+  performance. 
+</p>
+
+<pre><code class="language-rust">let reinhardt: String = String::from("For the Crusaders!");  
+println!("Reinhardt says: {}", reinhardt);
+</code></pre>
+
+<p>
+  You can concatonate strings by using the 
+  <code class="inline-code language-rust">push_str()</code> method on a 
+  String type.
+</p>
+
+<pre><code class="language-rust">// String
+let mut reinhardt: String = String::from("Hammer");  
+reinhardt.push_str(" DOWN!");
+println!("Reinhardt says: {}", reinhardt);
+</code></pre>
+
+<strong>More examples:</strong>
+
+<pre><code class="language-rust">let string = String::from("127.0.0.1:8080"); 
+let string_slice = &ampstring[10..]; 
+let string_borrow: &ampstr = &ampstring; 
+let string_literal = "1234"; 
+</code></pre>
+
+<h5>String slices: str</h5>
+<p>
+  Unlike a <strong>String</strong> type, the <strong>str</strong> type is a 
+  <strong>stack-allocated</strong>, fixed size
+  string type. In fact, when a string is defined as 
+  <code class="inline-code">str</code>, it's hard coded into the data section 
+  of the compiled binary. 
+</p>
+
+<p> 
+  A string-slice is not a String. It is a <i>reference</i> to a string that is 
+  stored somewhere in memory. You should use a string-slice when you want to 
+  work with string data, without taking ownership of it. This is good for 
+  memory efficiency, because you do not have to store a copy of a string 
+  somewhere else in memory. In the example below, we create a String object, 
+  and a u8 object, with the intention of constructing a new string out of them.
+</p>
+
+<pre><code class="language-rust">// String-slice
+let mut ticker_symbol: String = String::from("ESM");
+let year: u8 = 24;
+</code></pre>
+
+<p>
+  A few things need to happen in order to append a value of type 
+  <strong>u8</strong> as characters onto an existing string. We need to call 
+  <code class="inline-code language-rust">push_str()</code> on the 
+  <code class="inline-code language-rust">ticker_symbol</code> object, which 
+  requires an input of type <strong>&ampstr</strong>. The 
+  <code class="inline-code">year</code> 
+  object is of type <strong>u8</strong>, which has a 
+  <code class="inline-code language-rust">to_string()</code> method, but that 
+  method returns a <strong>String</strong> object. In order to get the 
+  appropriate input data type, we can simply borrow a reference to the 
+  <strong>String</strong> that we're creating. Since that string object isn't 
+  used anywhere else, it's discarded after it's been created, and referenced.
+</p>
+<pre><code class="language-rust">// Create a string with year.to_string(), then reference it.
+ticker_symbol.push_str(&ampyear.to_string());
+
+// Create a new string reference to the newly modified ticker_symbol
+let ticker_slice: &ampstr = &ampticker_symbol;
+println!("Ticker symbol: {}", ticker_slice);
+</code></pre>
+
+<h5>Indexed string slices</h5> 
+<p>
+  You can reference particular slices of a string with 
+  <code class="inline-code">[n..n]</code> syntax.
+</p>
+<pre><code class="language-rust">let asset_id: &ampstr = &ampticker_symbol[0..2];
+</code></pre>
+
+<h2>Shadowing</h2>
+<p>
+  Shadowing allows you to assign a new value to an existing variable name, but
+  this does not drop the value of the first variable. It simply changes which 
+  value the variable name is referencing.
+</p>
+<pre><code class="language-rust">let x: i32 = 25;
+let y: &ampi32 = &ampx;
+let x: i32 = 74;
+println!("X: {}\nY: {}", x, y);
+</code></pre>
+
+<p>
+  In this example, we can keep the value of x from being changed, but we can't 
+  keep what the name x refers to from being changed. Here's another example of 
+  shadowing.
+</p>
+<pre><code class="language-rust">let spaces = "    ";
+let spaces = spaces.len();
+</code></pre>
+
+<p>
+  First, we assign the value of <code class="inline-code">"    "</code> to s
+  paces, then we shadow a new variables named spaces, that's assigned an 
+  integer value equal to the length of the first 
+  <code class="inline-code">spaces</code> variable.
+</p>
+<pre><code class="language-rust">fn main() {
+    let c = 'z';
+    let z: char = 'ℤ'; // with explicit type annotation
+    let heart_eyed_cat = '😻';
+}
+</code></pre>
+
+<h2>Functions</h2>
+<p> 
+  Functions in Rust are declared with the 
+  <code class="inline-code language-rust">fn</code> keyword. Each function 
+  argument must be annotated, and a return type must be declared with 
+  <code class="inline-code">-></code>. Notice how the last line of the 
+  <code class="inline-code">add</code> function from the example below, doesn't 
+  have a semicolon at the end of the line. That's because this is the way to 
+  return a value from a function in Rust. You omit the semicolon, and the value 
+  on that line will be returned.
+</p>
+<pre><code class="language-rust">// Declaring a function with a return type of u8
+fn add(num_1: u8, num_2: u8) -> u8 {
+    num_1 + num_2 
+}
+
+pub fn main() {
+    // Call the add function and display output
+    let num_1: u8 = 10;
+    let num_2: u8 = 12;
+    let total: u8 = add(num_1, num_2);
+    println!("Total: {}", total);
+}
+</code></pre>
+<p>
+  You can return early from a function by using the return keyword and 
+  specifying a value, but most functions return the last expression implicitly. 
+  Here’s an example of a function that returns a value:
+</p>
+<h3>Hoisting</h3>
+<p>
+  Function hoisting is supported in Rust, which means that you can safely call 
+  a function on lines of code above the functions definitions. Such as calling
+  the <code class="inline-code language-rust">add()</code> function within 
+  <code class="inline-code language-rust">main()</code> even though 
+  <code class="inline-code language-rust">add()</code> isn't defined first.
+</p>
+<pre><code class="language-rust">fn main() {
+    add(3, 5);
+}
+
+fn add(x: u8, y: u8) -> u8 {
+    x + y 
+}
+</code></pre>
+
+<h2>Statements and Expressions</h2>
+<p> 
+  Function bodies are made up of a series of statements optionally ending in an 
+  expression. So far, the functions we’ve covered haven’t included an ending 
+  expression, but you have seen an expression as part of a statement. Because 
+  Rust is an expression-based language, this is an important distinction to 
+  understand. Other languages don’t have the same distinctions, so let’s look 
+  at what statements and expressions are and how their differences affect the 
+  bodies of functions.
+  <ul>
+    <li>
+      Statements are instructions that perform some action and do not return a 
+      value.
+    </li>
+    <li>
+      Expressions evaluate to a resultant value.
+    </li>
+  </ul> 
+</p>
+<p> 
+  Expressions evaluate to a value and make up most of the rest of the code that 
+  you’ll write in Rust. Consider a math operation, such as 5 + 6, which is an 
+  expression that evaluates to the value 11. Expressions can be part of 
+  statements: in Listing 3-1, the 6 in the statement let y = 6; is an expression 
+  that evaluates to the value 6. Calling a function is an expression. Calling a 
+  macro is an expression. A new scope block created with curly brackets is an 
+  expression, for example:
+</p>
+
+<h2>Control Flow</h2>
+<h3>if Expressions</h3>
+<p>
+  An if expression allows you to branch your code depending on conditions. 
+  You provide a condition and then state, “If this condition is met, run this 
+  block of code. If the condition is not met, do not run this block of code.”
+</p>
+
+<pre><code class="language-rust">let number = 3;
+if number < 5 {
+    println!("condition was true");
+} else {
+    println!("condition was false");
+}
+</code></pre>
+
+<p>
+  If expressions require a <strong>boolean</strong>. Rust doesn't implicitly 
+  convert values booleans like some languages do, which means you can't do 
+  things like:
+</p>
+<pre><code class="language-rust">let x = 23;
+if x {  // This line won't compile
+    run_some_code();
+}
+</code></pre>
+
+<h3>Repetition with Loops</h3>
+<p>
+  There are 3 different kinds of loops in Rust. 
+  <code class="inline-code language-rust">loop</code>, 
+  <code class="inline-code language-rust">while</code>, and 
+  <code class="inline-code language-rust">for</code>. Obviously <i>loop</i> is 
+  kind of an outlier here. While and for exist in basically every other 
+  language.
+</p>
+
+<h4>loop</h4>
+<p>
+  The loop keyword tells Rust to execute a block of code over and over again 
+  forever or until you explicitly tell it to stop. 
+</p>
+
+<pre><code class="language-rust">let target: u8 = 10;
+let mut count: u8 = 0;
+loop {
+    if count == target {
+        break
+    }
+    count += 1;
+}
+</code></pre>
+<p> 
+  One of the uses of a loop is to retry an operation you know might fail, such 
+  as checking whether a thread has completed its job. You might also need to 
+  pass the result of that operation out of the loop to the rest of your code. 
+  To do this, you can add the value you want returned after the break
+  expression you use to stop the loop; that value will be returned out of the 
+  loop so you can use it, as shown here:
+</p>
+<pre><code class="language-rust">let mut counter = 0;
+let result = loop {
+    counter += 1;
+
+    if counter == 10 {
+        break counter * 2;
+    }
+};
+println!("The result is {result}");
+</code></pre>
+<p>
+  You can also return from inside a loop. While break only exits the current 
+  loop, return always exits the current function.
+</p>
+<h5>Loop Labels to Disambiguate Between Multiple Loops</h5>
+<p>
+  If you have loops within loops, break and continue apply to the innermost loop 
+  at that point. You can optionally specify a loop label on a loop that you can 
+  then use with break or continue to specify that those keywords apply to the 
+  labeled loop instead of the innermost loop. Loop labels must begin with a 
+  single quote. Here’s an example with two nested loops:
+</p>
+
+<pre><code class="language-rust">let mut count = 0;
+'counting_up: loop {
+    println!("count = {count}");
+    let mut remaining = 10;
+
+    loop {
+        println!("remaining = {remaining}");
+        if remaining == 9 {
+            break;
+        }
+        if count == 2 {
+            break 'counting_up;
+        }
+        remaining -= 1;
+    }
+
+    count += 1;
+}
+println!("End count = {count}");
+</code></pre>
+<p>
+  The outer loop has the label 'counting_up, and it will count up from 0 to 2. 
+  The inner loop without a label counts down from 10 to 9. The first break that 
+  doesn’t specify a label will exit the inner loop only. The 
+  <code class="inline-code language-rust">break 'counting_up</code> 
+  statement will exit the outer loop.
+</p>
+<h4>while</h4>
+<p>
+  You know how these work.. Syntax:
+</p>
+<pre><code class="language-rust">let mut number = 3;
+while number != 0 {
+    println!("{number}!");
+    number -= 1;
+}
+println!("Lift off!");
+</code></pre>
+
+<h4>for</h4>
+<p>
+  These work intuitively, like you'd expect in Python.
+</p>
+<pre><code class="language-rust">let arr: [u8; 4] = [10,  20, 30, 40];
+for num in arr {
+    println!("Number: {num}");
+}
+</code></pre>
+<p>
+  The safety and conciseness of for loops make them the most commonly used loop 
+  construct in Rust. Even in situations in which you want to run some code a 
+  certain number of times, as in the countdown example that used a while loop in 
+  Listing 3-3, most Rustaceans would use a for loop. The way to do that would be 
+  to use a Range, provided by the standard library, which generates all numbers 
+  in sequence starting from one number and ending before another number.
+</p>
+<p>
+  Here’s what the countdown would look like using a for loop and another 
+  method we’ve not yet talked about, <code class="inline-code">rev</code>, to 
+  reverse the range:
+</p>
+
+<pre><code class="language-rust">for number in (1..4).rev() {
+    println!("{number}!");
+}
+println!("LIFTOFF!!!");
+</code></pre>
+

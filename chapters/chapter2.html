@@ -1,0 +1,146 @@
+<h2>Chapter 2</h2> 
+<p>
+  This chapter starts showing some basics of the Rust programming language 
+  by having the user program a guessing game. Lessons in this chapter include
+  using the 
+  <code class="inline-code">let</code>, and 
+  <code class="inline-code">match</code>
+  key words, methods, associated functions, and
+  external crates.
+  
+  The book creates a new crate called "guessing_game", but we're just going to 
+  create a module instead, since that's follows the format of this 
+  documentation. For this excercize, we're going to have to use the standard 
+  library's 
+  <code>io</code>
+  module.
+</p>
+
+<pre><code class="language-rust">use std::io;</code></pre>
+<p>
+  By default, Rust has a set of items defined in the standard library that it 
+  brings into the scope of every program. This set is called the prelude, and 
+  you can see everything in it in the standard library
+  <a href="https://doc.rust-lang.org/std/prelude/index.html">documentation</a>
+</p>
+
+<p>
+  Begin by declaring a mutable String variable.
+  <pre><code class="language-rust">let mut guess: String = String::new();</code></pre>
+  Then prompt the user to input a guess.
+</p>
+<pre><code class="language-rust">io::stdin().read_line(&ampmut guess).expect("Failed to read line");
+</code></pre>
+
+<p>
+  We'll use the Result enum in this example. Enumerators are a topic for a later
+  time, but for now, know that Results has 2 possible states, which are `Ok`, 
+  and `Err`. This is uses for error handling.
+</p>
+
+<h2>The guessing game</h2>
+<p>
+  Check the source code for the full code block. Below, we'll highlight some of
+  the unique bits, starting with the random number generation. Use the `rand`
+  crate to get tools that generate random numbers.
+</p>
+<pre><code class="language-rust">use rand::Rng;
+// Generate a random number
+let x: u8 = rand::thread_rng().gen_range(1..=100);
+</code></pre>
+<p>
+  Mutating a string by passing it into `read_line` appends new data on every
+  loop. We could reset the string data to "" on each loop, but we may as well
+  just declare the string inside the loop on each iteration rather than trying
+  to declare it in a higher scope than the loop.
+</p>
+
+<pre><code class="language-rust">loop {        
+    
+    // Declare a string
+    let mut guess: String = String::new();
+    
+    // Get user input
+    let _ = io::stdin()
+        .read_line(&ampmut guess)
+        .expect("Failed to read line");
+</code></pre>
+<p>
+  The guess in the expression refers to the original guess variable that 
+  contained the input as a string. The trim method on a String instance will 
+  eliminate any whitespace at the beginning and end, which we must do to be able 
+  to compare the string to the `u32`, which can only contain *numerical data*. 
+  The user must press `enter` to satisfy `read_line` and input their guess, 
+  which adds a newline character to the string. For example, if the user types
+  <code class="inline-code">5</code> and presses 
+  <code class="inline-code">enter</code>, guess looks like this: 
+  <code class="inline-code">5\n</code> 
+  
+  <pre><code class="language-rust">let guess: u8 = guess
+  .trim()
+  .parse()
+  .expect("Please type a number");</code></pre>
+</p>
+
+<p>
+  Use the cmp module to compare values, and use the Ordering enum to react
+  to the comparison. The full code for the guessing game is listed below.
+</p>
+<h3>Full Source Code:</h3>
+<pre><code class="language-rust">use std::io;
+use std::cmp::Ordering;
+use rand::Rng;
+
+
+pub fn run() {
+   
+
+    // Initial variables 
+    const MAX_GUESS_COUNT: u8 = 8;
+    println!("\nRust guessing game!");
+
+    // Generate a random number
+    let x: u8 = rand::thread_rng().gen_range(1..=100);
+
+    // Check the answer
+    let mut guess_count: u8 = 0;
+    loop {        
+        
+        // Get user input
+        println!("\nGuess a number between 1 and 100:");
+        let mut guess: String = String::new();
+        let _ = io::stdin()
+            .read_line(&mut guess)
+            .expect("Failed to read line");
+        
+        // Clean the string input for integer conversion
+        let guess: u8 = match guess.trim().parse() {
+            Ok(num) => num,
+            Err(_) => 0, 
+        };
+
+        // Check the guess
+        if guess > 0 {
+            match guess.cmp(&x) {
+                Ordering::Less => println!("\nToo small..."),
+                Ordering::Greater => println!("\nToo big..."),
+                Ordering::Equal => {
+                    println!("\nYou got it in {} tries", guess_count + 1);
+                    break;
+                }
+            }
+        } else {
+            println!("\nInvalid input");
+        }
+
+        // Break if the guess count exceeds 3
+        guess_count += 1;
+        if guess_count == MAX_GUESS_COUNT {
+            println!("No more guesses. You lose.");
+            println!("The answer was: {x}");
+            break;
+        }
+    }
+}
+</code></pre> 
+

@@ -1,0 +1,177 @@
+<h1>Enums and Pattern Matching</h1>
+<h2>Enums</h2>
+<p>
+  Enums allow you to define a type by enumerating its possible variants. Where 
+  structs give you a way of grouping together related fields and data, like a 
+  Rectangle with its width and height, enums give you a way of saying a value 
+  is one of a possible set of values. This seems like a good way of passing an 
+  'object' (for lack of a better term) that could be one of many types, as an 
+  function argument. For example, we may want to say that Rectangle is one of 
+  a set of possible shapes that also includes Circle and Triangle. To do this, 
+  Rust allows us to encode these possibilities as an enum.
+</p>
+<p>
+  Assume we're working with IP addresses. IP's can only be IPv4, or IPv6. Any 
+  IP address can be either a version four or a version six address, but not 
+  both at the same time. That property of IP addresses makes the enum data 
+  structure appropriate because an enum value can only be one of its variants. 
+</p>
+<pre><code class="language-rust">enum IpAddrKind {
+    V4(String),
+    V6(String),
+}
+
+fn main() {
+  let four = IpAddrKind::V4(String::from("127.0.0.1"));
+  let six = IpAddrKind::V6(String::from("::1"));
+}
+</code></pre>
+
+<h2>The match Control Flow Construct</h2>
+<p> 
+  Rust has an extremely powerful control flow construct called 
+  <code class="inline-code language-rust">match</code> that allows you to 
+  compare a value against a series of patterns and then execute code based on 
+  which pattern matches. Patterns can be made up of literal values, variable 
+  names, wildcards, and many other things. Chapter 18 covers all the 
+  different kinds of patterns and what they do. The power of match comes from 
+  the expressiveness of the patterns and the fact that the compiler confirms 
+  that all possible cases are handled.
+</p>
+<div class="quote-wrapper">
+  <blockquote cite="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    Think of a <code class="inline-code">match</code> expression as being like 
+    a coin-sorting machine: coins slide down a track with variously sized holes 
+    along it, and each coin falls through the first hole it encounters that it 
+    fits into. In the same way, values go through each pattern in a match, and 
+    at the first pattern the value “fits,” the value falls into the associated 
+    code block to be used during execution.
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    -- The book: Chapter 6 
+  </a>
+</div> 
+<p>
+  Let's look at some samples of enums. Below, is an example of a 
+  <code class="inline-code language-rust">Coin</code> enum. Back in the day, 
+  the US released 4 quarters with state symbols minted onto them, every year. 
+  Our source code also contains an enum for US States, that we can use to 
+  further classify a 
+  <code class="inline-code language-rust">Coin::Quarter</code> enum
+</p>
+
+<pre><code class="language-rust">#[derive(Debug)]
+enum UsState {
+    Alabama,
+    Alaska,
+    Arizona,
+    Arkansas,
+    California,
+    Colorodo,
+    Conneticut
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState)
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny");
+            1
+        }
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            println!("State quarter from {state:?}!");
+            25
+        }
+    }
+}
+
+pub fn run() {
+    let coin: Coin = Coin::Quarter(UsState::Arkansas);
+    println!("Value: {}", value_in_cents(coin));
+}
+</code></pre>
+<p>
+  The quote from the book below, gives an execellent break down of the 
+  <code class="inline-code language-rust">match</code> keyword, and the 
+  components that make up the whole statement.
+</p>
+<div class="quote-wrapper">
+  <blockquote>
+    <p> 
+      Let’s break down the <code class="inline-code language-rust">match</code> 
+      in the <code class="inline-code language-rust">value_in_cents()</code> 
+      function. First we list the 
+      <code class="inline-code language-rust">match</code> keyword followed by 
+      an expression, which in this case is the value coin. This seems very 
+      similar to a conditional expression used with 
+      <code class="inline-code language-rust">if</code>, but there’s a big 
+      difference: with <code class="inline-code language-rust">if</code>, the 
+      condition needs to evaluate to a 
+      <code class="inline-code language-rust">bool</code> value, but here it 
+      can be any type. The type of coin in this example is the Coin enum that 
+      we defined on the first line. 
+    </p>
+    <p> 
+      Next are the <code class="inline-code language-rust">match</code> arms. 
+      An arm has two parts: a pattern and some code. The first arm here has a 
+      pattern that is the value 
+      <code class="inline-code language-rust">Coin::Penny</code> and then the 
+      <code class="inline-code">=></code> operator that separates the pattern 
+      and the code to run. The code in this case is just the value 1. Each arm 
+      is separated from the next with a comma. 
+    </p>
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    -- The book: Chapter 6 
+  </a>
+</div>
+<h2>Matching with Option&ltt&gt</h2>
+<p>
+  Rust has a built in enum that's so common, that you don't even have to 
+  import it from a module. It's called 
+  <code class="inline-code language-rust">Option</code> and it's used to 
+  describe a value that can either be <i>something</i> or <i>nothing</i>. The 
+  types are <code class="inline-code language-rust">Some</code> or 
+  <code class="inline-code language-rust">None</code>. Let’s say we want to 
+  write a function that takes an 
+  <code class="inline-code language-rust">Option&lti32&gt</code> and, if 
+  there’s a value inside, adds 1 to that value. If there isn’t a value inside,
+  the function should return the None value and not attempt to perform any 
+  operations.
+</p>
+<pre><code class="language-rust">fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+
+let five = Some(5);
+let six = plus_one(five);
+let none = plus_one(None);
+</code></pre>
+<p>
+  An important thing to note about enums, is that the arms' patterns must cover
+  all possibilities. The code below will not compile, because we have not 
+  covered the <code class="inline-code language-rust">None</code> case.
+</p>
+<pre><code class="language-rust">fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        Some(i) => Some(i + 1),
+        // WILL NOT COMPILE. 'None' IS NOT HANDLED 
+    }
+}
+</code></pre>
+<p>
+  This behaviour means that matches in Rust are <i>exhaustive</i>. They must 
+  <i>exhaust</i> all possibilites
+</p>
+

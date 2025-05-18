@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rust Programming Notes</title>
+    <link href="css/style.css" rel="stylesheet">
+    
+    <!-- Library for syntax highlighting -->
+    <link 
+      href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" 
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js">
+    </script>
+    <script 
+      src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-rust.min.js"
+    ></script>
+    <script 
+      src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"
+    ></script>
+    <script 
+      src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-toml.min.js"
+    ></script>
+
+  </head>
+  
+  <body>
+  
+    <div id="page-body">
+      
+      <div id="left-panel">
+
+        <ol>
+          
+          <li onclick="loadPage('intro')" class="left-panel-button">
+            Introduction
+          </li>
+          <li onclick="loadPage('setup')" class="left-panel-button">
+            Initial Setup
+          </li>
+          <li onclick="loadPage('chapter1')" class="left-panel-button">
+            Chapter 1 
+          </li>
+          <li onclick="loadPage('chapter2')" class="left-panel-button">
+            Chapter 2 
+          </li>
+          <li onclick="loadPage('chapter3')" class="left-panel-button">
+            Chapter 3 
+          </li>
+          <li onclick="loadPage('chapter4')" class="left-panel-button">
+            Chapter 4 
+          </li>
+          <li onclick="loadPage('chapter5')" class="left-panel-button">
+            Chapter 5 
+          </li>
+          <li onclick="loadPage('chapter6')" class="left-panel-button">
+            Chapter 6 
+          </li>
+        </ol>
+
+      </div>
+      
+      <div id="right-panel">
+        
+        <div id="page-header">
+          <h1>Rust Programming Notes</h1> 
+        </div>
+        
+        <div id="page-mount-point"></div>
+      
+      </div>
+    
+    </div>
+    
+    <script src="js/index.js"></script>
+
+  </body>
+
+</html>
+

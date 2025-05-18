@@ -1,0 +1,120 @@
+<h2>Hello world!</h2>
+<p>
+  Write a main function in a .rs file, then run it with 
+  <code class="inline-code">cargo run</code>
+
+<pre><code class="language-rust">fn main() {
+    println!("Hello world!");
+}
+</code></pre>
+<code class="inline-code">cargo run filename.rs</code>
+
+<h2>Running a program</h2>
+<p>
+  After writing a <code class="inline-code">main()</code> function in a .rs 
+  file, you can run it with a cargo command: 
+  <code class="inline-code">cargo run filename.rs</code>
+</p>
+
+<h2>Compiling a program</h2>
+<p>
+  To compile the program, invoke the Rust compiler with `rustc <file>.rs`. 
+  There are options that can be passed to the rust compiler. So many, in fact, 
+  that the compiler has it's own
+  <a href="https://doc.rust-lang.org/rustc/index.html">book</a>
+  Start there if you need something other than the default compiler options.
+</p>
+
+<h2>Cargo</h2>
+<p>
+  Cargo is Rust’s build system and package manager. Most Rustaceans use this 
+  tool to manage their Rust projects because Cargo handles a lot of tasks for 
+  you, such as building your code, downloading the libraries your code depends 
+  on, and building those libraries.
+</p>
+
+<h3>Creating a Project With Cargo</h3>
+<p>
+  Create a new cargo project with 
+  <code class="inline-code">
+    cargo new project_name_here
+  </code>
+</p>
+
+<pre><code class="language-bash">cargo new hello_cargo
+cd hello_cargo
+</code></pre>
+
+<p>
+  To create a project in an existing directory, without creating a new 
+  directory, navigate to the target directory and run 
+  <code class="inline-code">cargo init</code>. 
+</p>
+<pre><code class="language-bash">mkdir my_project
+cd my_project
+cargo init
+</code></pre>
+
+<h3>Managing dependencies with Cargo.toml</h3>
+If you initialize a project with Cargo, then open the Cargo.toml file.
+<pre class="language-toml"><code>[package]
+name = "hello_cargo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+</code></pre>
+<p>
+  Cargo expects your source files to live inside the src directory. The 
+  top-level project directory is just for README files, license information, 
+  configuration files, and anything else not related to your code.
+</p>
+
+<p>
+  You can manually create a project by simply creating a Cargo.toml file like 
+  the one above. You must also include a <strong>/src</strong> directory with 
+  your source code inside. Whether the file is a 
+  <code class="inline-code">main.rs</code> or 
+  <code class="inline-code">lib.rs</code> depends on whether you're creating a 
+  <i>binary crate</i>, or a <i>library crate</i>.
+</p>
+
+<p>
+  Cargo has several modes of operation, including:
+
+  <ul>
+    <li class="bullet-item">
+      We can create a project using `cargo new`
+    </li>
+    <li class="bullet-item">
+      We can build a project using `cargo build`
+    </li>
+    <li class="bullet-item">
+      We can build and run a project in one step using `cargo run`
+    </li>
+    <li class="bullet-item">
+      We can build a project without producing a binary with `cargo check`
+    </li>
+  </ul>
+
+  Instead of saving the result of the build in the same directory as our code, 
+  Cargo stores it in the target/debug directory.
+</p>
+
+<h3>Building for Release</h3>
+<p>
+  When your project is finally ready for release you can use 
+  <code class="inline-code">
+    cargo build --release
+  </code> to compile it with optimizations. This command produces a binary in 
+  <strong>/target/release</strong> instead of <strong>/target/debug</strong>. 
+  Enabling optimizations makes the code run faster, but compile slower.
+</p>
+
+<p>
+  With simple projects, Cargo doesn’t provide a lot of value over just using 
+  rustc, but it will prove its worth as your programs become more intricate. 
+  Once programs grow to multiple files or need a dependency, it’s much easier 
+  to let Cargo coordinate the build.
+</p>
+

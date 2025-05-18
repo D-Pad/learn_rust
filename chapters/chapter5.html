@@ -1,0 +1,154 @@
+<h1>Structs</h1>
+<p>
+  Structs are comparable to Tuples in the sense that they can both hold 
+  multiple relatable values. The main difference is that a struct can name 
+  it's values. To define a struct, simply use the 
+  <code class="inline-code language-rust">struct</code> keyword
+</p>
+
+<pre><code class="language-rust">struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}
+</code></pre>
+<p>
+  To use a struct, you have to provide values for all fields.
+</p>
+
+<pre><code class="language-rust">fn main() {
+    let mut user1 = User {
+        email: String::from("someone@example.com"),
+        username: String::from("someusername123"),
+        active: true,
+        sign_in_count: 1,
+    };
+}
+</code></pre>
+<p>
+  Mutable structs can have their attributes modified by directly accessing the 
+  attribute with dot notation, and reassigning.
+</p>
+<pre><code class="language-rust">user1.email = String::from("dpad@dpadllc.com");
+</code></pre>
+
+<h2>Field init shorthand syntax</h2>
+<p>
+  When writing a function that takes in arguments and returns a struct, you will
+  often run into cases where the function arguments are the same names as the 
+  struct attributes. To avoid having a ton of arguments, you can use field init 
+  shorthand syntax.
+</p>
+<pre><code class="language-rust">fn build_new_user(email: String, name: String) -> User {
+    let user1 = User {
+        active: true,
+        email,
+        name 
+    };
+    user1
+}
+</code></pre>
+<p>
+  Notice how we didn't have to write 
+  <code class="inline-code">email: email</code> or 
+  <code class="inline-code">name: name</code> in that function. That's field 
+  init shorthand syntax.
+</p>
+<h2>Struct update syntax</h2>
+<p>
+  You can easily create an instance of a struct from another instance using 
+  struct update syntax.
+</p>
+<pre><code class="language-rust">let user2 = User {
+    active: false,
+    ..user1
+}
+</code></pre>
+
+<h2>Tuple Structs</h2>
+<p>
+  Tuple structs are like structs, but the fields aren't named. 
+</p>
+<pre><code class="language-rust">struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+fn main() {
+    let black = Color(0, 0, 0)5
+    let origin = Point(0, 0, 0);
+}
+</code></pre>
+
+<h2>Unit-like structs without fields</h2>
+<p>
+  You can also define structs that don’t have any fields. These are called unit-
+  like structs because they behave similarly to (), the unit type that we 
+  mentioned in “The Tuple Type” section. Unit-like structs can be useful when 
+  you need to implement a trait on some type but don’t have any data that you 
+  want to store in the type itself.
+</p>
+<pre><code class="language-rust">struct AlwaysEqual;
+
+fn main() {
+    let subject = AlwaysEqual;
+}
+</code></pre>
+
+<h2>Displaying struct data</h2>
+<p>
+  By default, structs do not implent Display or Debug traits, which is needed 
+  in order to display the structs data. You can either manually implement them, 
+  or you can inheret them using 
+  <code class="inline-code language-rust">#[derive(Debug)]</code> syntax.
+</p>
+
+<pre><code class="language-rust">#[derive(Debug)]
+struct User {
+    name: String,
+    email: String,
+    age: u8
+}
+
+pub fn main() {
+    let user = User {
+        name: String::from("D-Pad"),
+        email: String::from("dpad@dpadllc.com"),
+        age: 34 
+    }
+    println!("{:?}", user);
+}
+</code></pre>
+<p> 
+  Doing this will print all of the struct attributes on one line. To get a 
+  cleaner output on multiple lines, you can use 
+  <code class="inline-code language-rust">"{:#?}"</code>
+</p>
+<pre><code class="language-rust">println!("{:#?}", user);
+</code></pre>
+
+<h2>Methods</h2>
+<p> 
+  Methods are just functions that are defined within the context of a struct. 
+  To add methods, use the <code class="inline-code language-rust">impl</code> 
+  keyword.
+</p>
+<pre><code class="language-rust">impl User {
+    fn greet(&self) {
+        println!("Hello, my name is {}", self.name); 
+    }
+}
+</code></pre>
+<p>
+  Struct methods in Rust are just syntactical sugar for functions. The method
+  call and function call below are exactly the same.
+</p>
+<pre><code class="language-rust">let mut rect_a = Rectangle { 
+    width: 10,
+    height: 4 
+};
+
+// These are the same
+rect_a.rotate();
+Rectangle::rotate(&mut rect_a);
+</code></pre>
+

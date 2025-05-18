@@ -1,0 +1,96 @@
+<h2>Installing Rust</h2>
+<p>
+  The official way to install Rust is to use the rustup tool. On Arch based 
+  systems, just install rustup with <code class="inline-code">sudo pacman -S 
+  rustup</code> and run <code class="inline-code">rustup install stable</code>
+</p>
+
+<h2>Configuration</h2>
+<p>
+  In the Rust development environment, all tools are installed to the 
+  <code class="inline-code">~/.cargo/bin</code> directory, and this is where 
+  you will find the Rust toolchain, including <code class="inline-code">rustc
+  </code>, <code class="inline-code">cargo</code>, and 
+  <code class="inline-code">rustup</code>. It's recommended to add 
+  <code class="inline-code">~/.cargo/bin</code> to the 
+  <code class="inline-code">PATH</code> environment variable. You can confirm 
+  that the install was successful by checking the rust compiler version with 
+  <code class="inline-code">rustc --version</code>
+</p>
+
+<h2>Documentation</h2>
+<p>
+  When you install Rust, you install an offline copy of the documentation, 
+  including the book. Open the docs by running the command 
+  <code class="inline-code">rustup doc</code>, or 
+  <code class="inline-code">rustup doc --book</code> to open the book in a 
+  browser, offline.
+</p>
+
+<h2>Rust modules</h2>
+<p>
+  It's important to keep your code clean and organized from the very beginning.
+  That's why we're going to talk about modules before we get into the first 
+  chapter. Don't worry about the Rust code itself, if you don't know anything
+  about it yet, just pay attention to the file structure, and how we use the 
+  <code class="inline-code">mod.rs</code> files to declare modules.
+</p>
+<pre class="terminal-code"><code>
+├── src
+│   ├── README.md
+│   ├── main.rs
+│   ├── module_structure
+│   │   ├── README.md
+│   │   ├── mod.rs
+│   │   └── sub_mod
+│   │       ├── mod.rs
+│   │       └── string_ops.rs
+
+</code></pre>
+<p>
+  Notice how the <strong>module_structure</strong> directory contains a 
+  <code class="inline-code">mod.rs</code> file. Here are the contents of that 
+  file.
+</p>
+<h5 class="file-name">src/module_structure/mod.rs</h5>
+<pre><code class="language-rust">pub mod sub_mod;</code></pre>
+<p>
+  The <code class="inline-code">mod.rs</code> file simply imports code from the 
+  <code class="inline-code">sub_mod</code> directory. In the sub module, there
+  are more code files that get imported into the parent module. It's contents 
+  are as follows:
+</p>
+<h5 class="file-name">src/module_structure/sub_mod/mod.rs</h5>
+<pre><code class="language-rust">pub mod string_ops;</code></pre>
+
+<h5 class="file-name">src/module_structure/sub_mod/string_ops.rs</h5>
+<pre><code class="language-rust">pub fn double_string(string: &ampmut String) {
+    
+    // You can't borrow an immutable string from an already borrowed mutable
+    // string, so we have to clone the borrowed string and pass in a reference
+    // to it in order to actually double the string.
+    string.push_str(&ampstring.clone());
+}
+</code></pre>
+<p>
+  Now that the sub module has been created, you can import it back into 
+  <code class="inline-code">main.rs</code> like this:
+</p>
+
+<h5 class="file-name">src/main.rs</h5>
+
+<pre><code class="language-rust">mod module_structure;
+
+fn main() {
+    let mut name: String = String::from("dpad"); 
+    module_structure::sub_mod::string_ops::double_string(&mut name);
+    println!("{name}");
+}
+</code></pre>
+
+<p>
+  Compiling the project produces the following output:
+</p>
+<code class="inline-code">&gt&gt dpaddpad</code>
+
+

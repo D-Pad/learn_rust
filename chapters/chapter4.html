@@ -1,0 +1,463 @@
+<h1>Understanding Ownership</h1>
+<p>
+  The concept of ownership is the defining feature of Rust. It's how Rust is 
+  able to achieve memory safety, but it can be challening to comprehend in the 
+  beginning. This is where many first time Rust developers give up.
+  
+  In C/C++, when you manually allocate memory for a variable/object, you have 
+  to free up the memory space that the object occupies when you're finished 
+  using it. Otherwise, you create a memory leak. In Rust, the borrow checker 
+  is how you manage memory.
+</p>
+
+<h2>Rust's rules of ownership</h2> 
+<p> 
+  Ownership has 3 rules, that the Rust book recommends keeping easy access to, 
+  or memorize them.
+  <ul>
+    <li>
+      Each value in Rust has a variable that is it's owner.
+    </li>
+    <li>
+      There can only be one owner at a time.
+    </li>
+    <li>
+      When the owner goes out of scope, the value will be dropped. 
+    </li>
+  </ul>
+</p>
+
+<h3>Rule 1</h3>
+<i class="quote">Each value in Rust has a variable that is it's owner</i>
+<p> 
+  The variable s1 is the owner of the string value. We use a function to 
+  calculate the length of the string without ever giving up ownership of the 
+  value.
+</p>
+
+<pre><code class="language-rust">let s1: String = String::from("RUST OWNERSHIP RULE #1");
+let l_of_s1: u32 = string_length(&amps1);
+println!("Length of: {}", l_of_s1);
+</code></pre>
+
+<h3 id="rule-2">Rule 2</h3>
+<i class="quote">There can only be one owner at a time.</i>
+<p>
+  Assigning a variable to the value of another variable takes away ownership 
+  from the initial variable.
+</p>
+
+<pre><code class="language-rust">let s1: String = String::from("RUST OWNERSHIP RULE #2");
+let s2 = s1;
+println!("New owner (s2): {}", s2);
+println!("S1: {}", s1);
+</code></pre>
+
+<p>
+  The second <code class="inline-code">println!</code> statement in the code 
+  block above will cause a compiler error, because s1 doesn't own a value 
+  anymore, and has effectively been dropped. 
+</p>
+
+<h3>Rule 3</h3>
+<i class="quote">
+  When the owner goes out of scope, the value will be dropped.
+</i> 
+<p>
+  This applies not only to function calls, but any code block surrounded by
+  curly-braces. Whether it's in an if-statement, or a nested code block with 
+  no entry condition, like below
+</p>
+<pre><code class="language-rust">{
+    let inner_string: String = String::from("INNER SCOPE");
+    println!("Nested code block message: {}", inner_string);
+}
+println!("This line will make the compiler angry: {}", inner_string);
+</code></pre>
+<p>
+  The last line in the code block above would cause a compiler error, because 
+  <code class="inline-code">test_string</code> was dropped after the first 
+  <code class="inline-code">println!</code> statement. 
+</p>
+
+<h2>Ownership as a Discipline for Memory Safety</h2>
+<h3>Operations on Memory</h3>
+<p>Take a look at the snip below:</p>
+<pre><code class="language-rust">let y: u8 = 0;
+if y {
+    println!("Yo!");
+}
+</code></pre>
+
+<p>
+  Rust doesn’t specify what happens if you try to run 
+  <code class="inline-code">if y { .. }</code>, because Rust requires a 
+  boolean value to evalute if-else branches. That behavior, or what happens 
+  after executing the instruction, is undefined. Undefined behavior is 
+  dangerous. In a language like C++, a few different things could happen:
+</p>
+  <ul>
+    <li>
+      The code executes without crashing, and no one notices a problem.
+    </li>
+    <li>
+      The code immediately crashes due to a segmentation fault or another kind 
+      of operating system error.
+    </li>
+    <li>
+      The code executes without crashing, until a malicious actor creates the 
+      right input to delete your production database, overwrite your backups, 
+      and steal your lunch money.
+    </li>
+  </ul>
+<p> 
+  A foundational goal of Rust is to ensure that your programs never have 
+  undefined behavior. That is the meaning of “safety.” Undefined behavior is 
+  especially dangerous for low-level programs with direct access to memory. 
+  About 70% of reported security vulnerabilities in low-level systems are caused 
+  by memory corruption, which is one form of undefined behavior.
+</p>
+<p> 
+  Memory is the space where data is stored during the execution of a program.
+  There are many ways to think about memory:
+  <ul>
+    <li>
+      If you are unfamiliar with systems programming, you might think of memory 
+      at a high level like “memory is the RAM in my computer” or “memory is the 
+      thing that runs out if I load too much data”.
+    </li> 
+    <li>
+      If you are familiar with systems programming, you might think of memory 
+      at a low level like “memory is an array of bytes” or “memory is the 
+      pointers I get back from malloc”.
+    </li>  
+  </ul> 
+</p>
+
+<h4>Allocating to the heap</h4>
+<p>
+  Variables live in the Stack, and "boxes" live in the heap. To transfer access 
+  to data without copying it, Rust uses pointers. A pointer is a value that 
+  describes a location in memory. The value that a pointer points-to is called 
+  its pointee. One common way to make a pointer is to allocate memory in the 
+  heap.
+</p>
+
+<p>
+  The heap is a separate region of memory where data can live indefinitely. 
+  Heap data is not tied to a specific stack frame. Rust provides a construct 
+  called <strong>Box</strong> for putting data on the heap. For example, we 
+  can wrap the million-element array in 
+  <code class="inline-code">Box::new</code> like this:
+</p>
+
+<pre><code class="language-rust">let a = Box::new([0; 1_000_000]);
+let b = a;
+</code></pre>
+
+<p>
+  <strong>Q:</strong> Which of the following best describes the difference 
+  between the stack and the heap?
+</p>
+<p> 
+  <strong>A:</strong> The stack holds data associated with a specific function,
+  while the heap holds data that can outlive a function
+</p>
+
+<h4>Rust Does Not Permit Manual Memory Management</h4>
+<p>
+  Stack frames are automatically managed by Rust. When a function is called, 
+  Rust allocates a stack frame for the called function. When the call ends, Rust 
+  deallocates the stack frame.
+</p>
+
+<h4>Collections Use Boxes</h4>
+<p>
+  Boxes are used by Rust data structures like Vec, String, and HashMap to hold 
+  a variable number of elements. For example, here’s a program that creates, 
+  moves, and mutates a string:
+</p>
+
+<pre><code class="language-rust">fn main() {
+    let first = String::from("Ferris");  // L1
+    let full = add_suffix(first);        // L2
+    println!("{full}");
+}
+
+fn add_suffix(mut name: String) -> String {
+    name.push_str(" Jr.");  // L3
+    name                    // L4
+}
+</code></pre>
+
+<p>
+  This program is more involved, so make sure you follow each step:
+</p>
+<ol>
+  <li>
+    At L1, the string “Ferris” has been allocated on the heap. It is owned 
+    by first.
+  </li>
+  <li>
+    At L2, the function add_suffix(first) has been called. This moves 
+    ownership of the string from first to name. The string data is not 
+    copied, but the pointer to the data is copied.
+  </li>
+  <li> 
+    At L3, the function name.push_str(" Jr.") resizes the string’s heap 
+    allocation. This does three things. First, it creates a new larger 
+    allocation. Second, it writes “Ferris Jr.” into the new allocation. Third, 
+    it frees the original heap memory, and now `first` points to deallocated 
+    memory.
+  </li>
+  <li> 
+    At L4, the frame for add_suffix is gone. This function returned name, 
+    transferring ownership of the string to full.
+  </li>
+</ol>
+
+<h4>Variables Cannot Be Used After Being Moved</h4>
+<p>
+  The string program helps illustrate a key safety principle for ownership. 
+  Imagine that first were used in main after calling add_suffix. We can 
+  simulate such a program and see the undefined behavior that results.
+</p>
+
+<h2>Closing Thoughts On Borrowing and Referencing</h2>
+<p>
+  Technically speaking, borrowing and referencing are the same things. You 
+  create a <strong>reference</strong> <i>by</i> <strong>borrowing</strong>. 
+  References can be either mutable, or immutable. A mutable reference allows 
+  you to modify the original data.
+</p> 
+<p>
+  Simple data types can be <i>copy types</i> which means that you can't change 
+  ownership by reassigning like you do with strings. Instead, a new variable is 
+  created entirely.
+</p>
+
+<pre><code class="language-rust">let agro_level: u8 = 200;
+let mut health = agro_level;
+health -= 10;
+println!("Health: {}\nAgro: {}", health, agro_level);
+
+// To create a mutable reference of an integer, which modifies
+// the original value also, you have to declare both variables
+// as mutable types. 
+let mut x: u32 = 29;
+let y: &ampmut u32 = &ampmut x;
+*y += 71; 
+println!("x: {}", x);  // Output's 100
+</code></pre>
+
+<p>
+  There are at least 4 ways to work with referenced data in Rust, which is to
+  <strong>move, copy, borrow,</strong> and <strong>borrow mutably</strong>
+</p>
+
+<h3>Move</h3>
+<p>
+  A <strong>move</strong> happens when you pass something that is not a copy 
+  type into another function. When the value is passed, the function now owns 
+  the value. If the function does not return the value, then the value is 
+  freed from memory after the function has consumed it. See ownership 
+  <a href="#rule-2">rule #2</a> for another way to move.
+</p>
+
+<pre><code class="language-rust">fn use_string(s: String) {
+    println!("This string: {}", s); 
+    // s is freed from memory, here
+}
+
+fn main() {
+    let string = String::new();
+    use_string(string);  // <- Ownership moved here.
+//  println!("{}", string);
+}
+</code></pre>
+<p>
+  The commented line above would cause a compiler error, because ownership
+  of <code class="inline-code">string</code> was transferred without being 
+  returned, and thus, freed from memory when the 
+  <code class="inline-code">use_string()</code> function was called.
+</p>
+
+<h3>Copy</h3>
+<p>
+  Some stack-allocated data types implement the 'Copy' trait, which means that 
+  the values are copied rather than having their ownership moved. This works 
+  fine for data types that take up small amounts of memory, such as integers.
+</p>
+
+<pre><code class="language-rust">fn use_int(n: u32) {
+    println!("This value: {}", n); 
+}
+
+fn main() {
+    let num: u32 = 32;
+    use_int(num);
+    println!("{}", num);
+}
+</code></pre>
+<p>
+  Unlike the example in the <i>Move</i> section, no error is thrown when 
+  accessing num after the call to <code class="inline-code">use_int()</code>.
+  Even the largest integers need only 16 bytes to be able to store their 
+  value in memory, but that would hardly be enough to store the first and 
+  last name of some people, much less large pieces of text. This is where 
+  borrowing comes in.
+</p>
+
+<h3>Borrow</h3>
+<p>
+  Borrowing in Rust allows you to reference an existing string without taking
+  ownership of it.
+</p>
+
+<pre><code class="language-rust">fn use_string(s: &ampstr) {
+    println!("This string: {}", s); 
+}
+
+fn main() {
+    let string = String::new();
+    use_string(&ampstring);    // <- Borrow occurs here, no ownership transfer 
+    println!("{}", string); // <- Line doesn't crash, like in 'Move' example 
+}
+</code></pre>
+
+<h3>Borrow mutably</h3>
+<p>
+  Borrowing mutably allows you to borrow a value, mutate the original value, 
+  then return ownershship. Continuing with the same example from earlier:
+</p>
+<pre><code class="language-rust">fn add_sleep(sleep_str: &ampmut String) {
+    sleep_str.push_str("z"); 
+}
+
+fn main() {
+    let mut sleep_str: String = String::from("Z");
+    for _ in 0..15 {
+        // Mutable reference is passed in, and the string is still accessible
+        // after the add_sleep function call
+        add_sleep(&ampmut sleep_str);
+    }
+    println!("Sleeping: {}", sleep_str);
+}
+</code></pre>
+<p>
+  The mutable string is borrowed and passed into the `add_sleep()` function 
+  in the for-loop. If we passed in the string itself, it would be dropped at 
+  the end of the function. By passing in a mutable reference, we're able to 
+  mutate the source data on each loop iteration, dropping the reference after 
+  the mutation, and maintain access to the original object after the function 
+  call.
+</p>
+
+<h2>Dereferencing</h2>
+<p> 
+  Examples using boxes and strings have not shown how Rust “follows” a pointer 
+  to its data. For example, the println! macro has mysteriously worked for both 
+  owned strings of type String, and for string references of type &String. The 
+  underlying mechanism is the dereference operator, written with an asterisk 
+  (*)
+</p>
+<p>
+  Dereferencing works the same way that it does in C. Dereferencing happens 
+  implicitly a lot of times in Rust, but is necessary to do manually on 
+  occassion. In the sample below, we create a reference to <strong>_x</strong>
+  as <strong>_r</strong>, then attempt to append _x with the value of _r. 
+  Since _r is only a reference, we need to <i>dereference</i> it in order to 
+  access the value stored in it. This is done prefixing a single 
+  <code class="inline-code">*</code> onto the variable name. 
+</p>
+
+<pre><code class="language-rust">let mut _x: i32 = 5;
+let _r: &ampi32 = &_x;
+_x += *_r;
+println!("_x: {}", _x);
+</code></pre>
+
+<p>
+  Here's another example using strings. You can't borrow an immutable string 
+  from an already borrowed mutable string, so we have to clone the borrowed 
+  string and pass in a reference to the clone in order to actually double the 
+  string.
+</p>
+<pre><code class="language-rust">pub fn double_string(string: &ampmut String) {
+    string.push_str(&ampstring.clone());
+}
+</code></pre>
+
+The snippet below demonstrates how dereferencing works when it's on either
+side of an assignment.
+
+<pre><code class="language-rust">let mut x: Box&lti32&gt = Box::new(1);
+let a: i32 = *x;         // *x reads the heap value, so a = 1
+*x += 1;                 // *x on the left-side modifies the heap value,
+                         //     so x points to the value 2
+
+let r1: &ampBox&lgti32&gt = &ampx;    // r1 points to x on the stack
+let b: i32 = **r1;       // two dereferences get us to the heap value
+
+let r2: &ampi32 = &*x;      // r2 points to the heap value directly
+let c: i32 = *r2;        // so only one dereference is needed to read it
+</code></pre>
+
+<p>
+  You probably won’t see the dereference operator very often when you read Rust 
+  code. Rust implicitly inserts dereferences and references in certain cases, 
+  such as calling a method with the dot operator
+</p>
+
+<hr>
+<h2>4.4 The Slice Type</h2>
+<p>
+  A slice is a type of reference, so it's a non-owning pointer. 
+</p>
+<pre><code class="language-rust">let s = String::from("hello world");
+
+let hello: &ampstr = &amps[0..5];
+let world: &ampstr = &amps[6..11];
+let s2: &ampString = &amps;
+</code></pre>
+<p>
+  Slices are special kinds of references because they are “fat” pointers, or 
+  pointers with metadata. Here, the metadata is the length of the slice.
+</p>
+
+<h3>String Literals Are Slices</h3>
+<p>
+  Recall that we talked about string literals being stored inside the binary. 
+  Now that we know about slices, we can properly understand string literals:
+</p>
+<pre><code class="language-rust">let s = "Hello, world!";</code></pre>
+<p>
+  The type of <code class="inline-code">s</code> here is 
+  <code class="inline-code">&ampstr</code>: it’s a slice pointing to that 
+  specific point of the binary. This is also why string literals are immutable;
+  <code class="inline-code">&ampstr</code> is an immutable reference.
+</p>
+<h3>Other Slices</h3>
+<p>
+  String slices, as you might imagine, are specific to strings. But there’s a 
+  more general slice type, too. Consider this array:
+</p>
+<pre><code class="language-rust">let a = [1, 2, 3, 4, 5];</code></pre>
+
+<p>
+  Just as we might want to refer to a part of a string, we might want to refer 
+  to part of an array. We’d do so like this:
+</p>
+<pre><code class="language-rust">let a = [1, 2, 3, 4, 5];
+let slice = &ampa[1..3];
+assert_eq!(slice, &amp[2, 3]);
+</code></pre>
+
+<p>
+  This slice has the type <code class="inline-code">&amp[i32]</code>. 
+  It works the same way as string slices do, by storing a reference to the 
+  first element and a length. You’ll use this kind of slice for all sorts of 
+  other collections. We’ll discuss these collections in detail when we talk 
+  about vectors in Chapter 8.
+</p>
+
