@@ -1,11 +1,6 @@
 
 // Initial values
 const leftPanelContainer = document.getElementById('left-panel');
-const rangeOfChapters = [...Array(23).keys()];
-const chapterNames = rangeOfChapters.map((num) => {
-  return [`chapter${num + 1}`, `Chapter ${num + 1}`]
-});
-
 
 // Function for loading new page content
 const loadPage = (chapterName) => {

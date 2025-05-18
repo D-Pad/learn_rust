@@ -5,6 +5,6 @@
 mod the_book;
 
 fn main() {
-    the_book::chapter_6::run();
+    the_book::testing::run();
 }
 

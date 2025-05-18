@@ -172,6 +172,152 @@ let none = plus_one(None);
 </code></pre>
 <p>
   This behaviour means that matches in Rust are <i>exhaustive</i>. They must 
-  <i>exhaust</i> all possibilites
+  <i>exhaust</i> all possibilites.
 </p>
+<h2>Catch-all Patterns and the _ Placeholder</h2>
+<p>
+  You can also use an enum to take action for a few particular values, and 
+  something else for all other values. You can name the last variable anything
+  you want. The sample below uses a variable named 
+  <code class="inline-code">other</code> to handle any value other than 3 or 5.
+</p>
+<pre><code class="language-rust">use rand::Rng;
+
+
+pub fn dice_rolling() {
+   
+    // Generate a random number
+    let roll_value: u8 = rand::thread_rng().gen_range(1..=5); 
+   
+    // Check the value for a win, or death condition
+    match roll_value {
+        3 => explode_player(),
+        5 => reward_player(),
+        other => retry(other) 
+    }
+
+    // Arm functions
+    fn retry(val: u8) {
+        println!("You rolled {val}. Try again!");
+    }
+
+    fn explode_player() {
+        println!("You're dead!");
+    }
+
+    fn reward_player() {
+       println!("You win!"); 
+    }
+}
+</code></pre>
+<p>
+  This code compiles, even though we haven’t listed all the possible values a 
+  <code class="inline-code language-rust">u8</code> can have, because the 
+  last pattern will match all values not specifically listed. 
+</p>
+<h3>Using _</h3>
+<p>
+  Sometimes you may need a placeholder value, but you don't actually want to 
+  use the value. That's where <code class="inline-code">_</code> comes in. The 
+  <code class="inline-code language-rust">match</code> case above could be 
+  rewritten as:
+</p>
+<pre><code class="language-rust">    match roll_value {
+        3 => explode_player(),
+        5 => reward_player(),
+        _ => println!("Try again!") 
+    }
+</code></pre>
+<p>
+  If you don't want to do anything at all with the <strong>catch-all</strong>,
+  you can use the <i>unit value</i> <code class="inline-code">()</code>.
+</p>
+<pre><code class="language-rust">    match roll_value {
+        3 => explode_player(),
+        5 => reward_player(),
+        _ => () 
+    }
+</code></pre>
+
+<h2>Ownership and Matching</h2>
+<p>
+  Be careful when matching a value, if you end up using the value. The code 
+  below won't compile because of the 
+  <code class="inline-code language-rust">println!()</code> statement at the 
+  bottom.
+</p>
+<pre><code class="language-rust">let opt: String = String::from("Hello world");
+
+match opt {
+    Some(s) => println!("{s}"),  // Ownership moved here
+    None => println!("None")
+}
+println!("{opt}");  // Won't compile because opt has been freed from memory
+</code></pre>
+<p>
+  The solution here is to borrow <code class="inline-code">opt</code> in the 
+  <code class="inline-code language-rust">match</code> statement.
+</p>
+<pre><code class="language-rust">let opt: String = String::from("Hello world");
+
+// Borrow opt
+match &ampopt {
+    Some(s) => println!("{s}"),  // 's' is of type &ampString
+    None => println!("None")
+}
+println!("{opt}"); 
+</code></pre>
+<div class="quote-wrapper">
+  <blockquote>
+    Rust will “push down” the reference from the outer enum, 
+    <code class="inline-code language-rust">&ampOption&ltString&gt</code>, to 
+    the inner field, <code class="inline-code language-rust">&ampString</code>.
+    Therefore <code class="inline-code">s</code> has type 
+    <code class="language-rust inline-code ">&ampString</code>, and 
+    <code class="inline-code">opt</code> can be used after the match. To 
+    better understand this “pushing down” mechanism, see the section about 
+    binding modes in the Rust Reference.
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    -- The book: Chapter 6 
+  </a>
+</div>
+
+<h2>Concise Control Flow with 'if let'</h2>
+<p>
+  The if let syntax lets you combine if and let into a less verbose way to 
+  handle values that match one pattern while ignoring the rest. When using
+  an enum and a <code class="inline-code language-rust">match</code> 
+  statement, you may find yourself needing match a single pattern, while
+  ignoring everything else. You can use the 
+  <code class="inline-code">_ =&gt ()</code> syntax, but that is 
+  unnecessary boilerplate, and would make your code more verbose than it has 
+  to be. A better way to write this would be to use the 
+  <code class="inline-code language-rust">if let</code> syntax.
+</p>
+<pre><code class="language-rust">let config_max = Some(3u8);
+if let Some(max) = config_max {
+    println!("The maximum is configured to be {max}");
+}
+</code></pre>
+<p>
+  The syntax if let takes a pattern and an expression separated by an equal 
+  sign. It works the same way as a match, where the expression is given to 
+  the match and the pattern is its first arm. In this case, the pattern is 
+  <code class="inline-code language-rust">Some(max)</code>, and the max binds 
+  to the value inside the <code class="inline-code language-rust">Some</code>.
+</p>
+<div class="quote-wrapper">
+  <blockquote>
+    Using <code class="inline-code language-rust">if let</code> means less 
+    typing, less indentation, and less boilerplate code. However, you lose 
+    the exhaustive checking that match enforces. Choosing between match and 
+    if let depends on what you’re doing in your particular situation and 
+    whether gaining conciseness is an appropriate trade-off for losing 
+    exhaustive checking. 
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    -- The book: Chapter 6 
+  </a>
+</div>
 
