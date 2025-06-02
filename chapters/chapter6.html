@@ -320,4 +320,28 @@ if let Some(max) = config_max {
     -- The book: Chapter 6 
   </a>
 </div>
+<p>
+  You can also add an <code class="inline-code language-rust">else</code> to an
+  <code class="inline-code language-rust">if let</code>, which behaves the same
+  as using <code class="inline-code language-rust">_ =&gt ()</code> in a 
+  <code class="inline-code language-rust">match</code> statement. The two code 
+  blocks below are identical in behavior/output.
+</p>
+
+<h6>match</h6>
+<pre><code class="language-rust">let mut count = 0;
+match coin {
+    Coin::Quarter(state) => println!("State quarter from {state:?}!"),
+    _ => count += 1,
+}
+</code></pre>
+
+<h6>if let</h6>
+<pre><code class="language-rust">let mut count = 0;
+if let Coin::Quarter(state) = coin {
+    println!("State quarter from {state:?}!");
+} else {
+    count += 1;
+}
+</code></pre>
 

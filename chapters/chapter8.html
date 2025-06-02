@@ -1,0 +1,578 @@
+<h1>Common Collections</h1>
+<p>
+  This section will discuss the standard library's 
+  <strong>common collections</strong>. A powerful module with some common 
+  <i>collection</i> types such as <i>vectors</i>. Arrays and tuples are 
+  stack allocated, but the types you'll find in the collections module are
+  heap allocated. This makes them growable, but less performant. 
+</p>
+<h2>Vectors</h2>
+<p>
+  The first collection we'll talk about, are vectors. Written as 
+  <code class="inline-code language-rust">Vec&ltT&gt</code>
+</p>
+<h3>Creating a New Vector</h3>
+<p>
+  To create a new empty vector, we call the 
+  <code class="inline-code language-rust">Vec::new</code> function, as shown
+  below
+</p>
+<pre><code class="language-rust">let v: Vec&lti32&gt = Vec::new();
+</code></pre>
+<p>
+  Some notes on Vectors and their stored data types:
+</p>
+<div class="quote-wrapper">
+  <blockquote cite="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    Note that we added a type annotation here. Because we aren’t inserting any 
+    values into this vector, Rust doesn’t know what kind of elements we intend 
+    to store. This is an important point. Vectors are implemented using 
+    generics. The Vec&ltT&gt type provided by the standard library 
+    can hold any type. When we create a vector to hold a specific type, we can 
+    specify the type within angle brackets. In the code block above we’ve 
+    told Rust that the Vec&ltT&gt in v will hold elements of the i32 type. 
+    More often, you’ll create a Vec&ltT&gt with initial values and Rust will 
+    infer the type of value you want to store, so you rarely need to do this 
+    type annotation. Rust conveniently provides the vec! macro, which will 
+    create a new vector that holds the values you give it. Listing 8-2 
+    creates a new Vec&lti32&gt that holds the values 1, 2, and 3. The integer 
+    type is i32 because that’s the default integer type, as we discussed 
+    in the “Data Types” section of Chapter 3.
+    <pre><code class="language-rust">let v = vec![1, 2, 3];</code></pre>
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch06-02-match.html">
+    -- The book: Chapter 8 
+  </a>
+</div> 
+<h4>Adding Elements to a Vector</h4>
+<p>
+  Vectors can have new values inserted into it with the 
+  <code class="inline-code language-rust">push()</code> method. 
+</p>
+<pre><code class="language-rust">pub fn run() {
+    let mut v: Vec<i32> = Vec::new();
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    println!("Easy as {:?}", v);
+}
+</code></pre>
+<h4>Reading Values from a Vector</h4>
+<p>
+  Vectors have 2 ways of referencing their values. Either from indexing, or by 
+  using the <code class="inline-code language-rust">get()</code> method.
+</p>
+<pre><code class="language-rust">let v = vec![1, 2, 3, 4, 5];
+
+let third: &i32 = &v[2];
+println!("The third element is {third}");
+
+let third: Option<&i32> = v.get(2);
+match third {
+    Some(third) => println!("The third element is {third}"),
+    None => println!("There is no third element."),
+}
+</code></pre>
+<p>
+  However, these two methods are not created equally. When indexing, if you 
+  us an invalid index value, such as indexing the 10th item of a vector with 
+  only 3 items, then your program will crash. Conversely, using the 
+  <code class="inline-code language-rust">get()</code> method won't cause 
+  a panic.
+</p>
+<pre><code class="language-rust">let v = vec![1, 2, 3, 4, 5];
+
+let does_not_exist = &v[100];      // This line causes a panic
+let does_not_exist = v.get(100);   // This line does not   
+</code></pre>
+<p>
+  You can use this to your advantage when writing programs. Sometimes you may
+  want the program to crash on an indexing error. Other times you may want to 
+  use <code class="inline-code language-rust">get()</code> and return 
+  <code class="inline-code language-rust">None</code>
+</p>
+
+<h3>Iterating Through a Vector</h3>
+<p>
+  You can (and probably should) loop through each item in a Vector rather than 
+  having to loop for <i>X</i> times and reference by index.
+</p> 
+<pre><code class="language-rust">let v = vec![100, 32, 57];
+for n_ref in &v {
+    // n_ref has type &i32
+    let n_plus_one: i32 = *n_ref + 1;
+    println!("{n_plus_one}");
+}
+</code></pre>
+<p>
+  Notice how we had to use the <code class="inline-code">*</code> dereference 
+  operator before we could add a 1 to it. We can also iterate over mutable 
+  references to each element in a mutable vector in order to make changes to 
+  all the elements. The for loop in below will add 50 to each element.
+</p>
+<pre><code class="language-rust">let mut v = vec![100, 32, 57];
+for n_ref in &mut v {
+    // n_ref has type &mut i32
+    *n_ref += 50;
+}
+</code></pre>
+
+<h5>Vector Demo Source Code</h5>
+
+<pre><code class="language-rust">let mut people: Vec&ltString&gt = Vec::new();
+people.push(String::from("chad"));
+people.push(String::from("brad"));
+
+println!("{:?}", people);
+println!("winner = {}", people[0]); 
+println!("loser = {}", people[1]); 
+</code></pre>
+
+<h3>Safely Using Iterators</h3>
+<p>
+  Iterators will be discussed in more detail in a later chapter. For now, an 
+  important note to make is that 
+  <strong>iterators contain a pointer to data within the vector</strong>. For 
+  more information, and a helpful diagram, go 
+  <a href="https://rust-book.cs.brown.edu/ch08-01-vectors.html#safely-using-iterators">
+    here
+  </a>
+</p>
+<pre><code class="language-rust">let mut v: Vec&lti32&gt         = vec![1, 2];
+let mut iter: Iter&lt'_, i32&gt = v.iter();
+let n1: &ampi32                = iter.next().unwrap();
+let n2: &ampi32                = iter.next().unwrap();
+let end: Option&lt&ampi32&gt       = iter.next();
+</code></pre>
+<p>
+  The iterator in the code block above is a pointer that moves through each 
+  element of the vector. When the iterator runs through the vector, it will 
+  either return an instance of <code class="inline-code language-rust">
+    Some
+  </code> or <code class="inline-code language-rust">None</code>, when the 
+  iterator reaches the end of the vector.
+</p>
+<p>
+  Rust's safety rules prohibit modifying the length of a Vector while iterating
+  through it. If you need to iterator over a Vector, and modify it, then you 
+  can use a range to loop through the index values of the vector.
+</p>
+<pre><code class="language-rust">let mut v: Vec&lti32&gt        = vec![1, 2];
+let mut iter: Range&ltusize&gt = 0 .. v.len();
+let i1: usize              = iter.next().unwrap();
+let n1: &ampi32               = &ampv[i1];
+</code></pre>
+
+<h3>Using an Enum to Store Multiple Types</h3>
+<p>
+  Vectors can only store a single data type, but sometimes it's quite useful
+  to store elements of different types, like lists in Python. In Rust, you can 
+  use an enum for this. Take a look at the code block below. This defines 
+  an enum that can hold 3 different data types. We then use the enum to create
+  rows in a spreadsheet.
+</p>
+<pre><code class="language-rust">enum SpreadsheetCell {
+    Int(i32),
+    Float(f64),
+    Text(String),
+}
+
+let row = vec![
+    SpreadsheetCell::Int(3),
+    SpreadsheetCell::Text(String::from("blue")),
+    SpreadsheetCell::Float(10.12),
+];
+</code></pre>
+<p>
+  If you don’t know the exhaustive set of types a program will get at runtime 
+  to store in a vector, the enum technique won’t work. Instead, you can use a 
+  trait object, which we’ll cover in Chapter 18. For more information on 
+  mixing data types with enums, read 
+  <a href="https://rust-book.cs.brown.edu/ch08-01-vectors.html#using-an-enum-to-store-multiple-types">
+    this
+  </a>
+</p>
+<h2>Storing UTF-8 Encoded Text With Strings</h2>
+<p>
+  Strings in Rust are quite complicated compared to other programming 
+  languages. Having multiple string types is one of the main reasons for this,
+  but UTF-8 encoding is another reason that working with Strings can be 
+  challenging. We're talking about strings in this chapter on 
+  <strong>collections</strong> because 
+  <code class="inline-code language-rust">String</code> types are a collection
+  of bytes, that are interpreted as UTF-8 encoded text.
+</p>
+<p>
+  There is actually only one string type in the Rust's core language, and that
+  is the <code class="inline-code language-rust">str</code> (string slice)
+  type. String slices are actually hard coded into the binary file when a 
+  program is compiled. The 
+  <code class="inline-code language-rust">String</code> type, on the other 
+  hand, is a part of the <strong>Rust standard library</strong>. Not a part 
+  of the core language itself, and it is a growable, mutable, owned, UTF-8 
+  encoded string type. Both <code class="inline-code language-rust">str</code>
+  and <code class="inline-code language-rust">String</code> types are UTF-8 
+  encoded.
+</p>
+<p>
+  String literals (<code class="inline-code language-rust">str</code>) are 
+  hard coded into the binary file by the compiler. You can actually see them 
+  if you view the compiled file in a text editor. This is why you have to use
+  <code class="inline-code language-rust">&ampstr</code> when declaring a 
+  string slice variable. The text that you write between double quotes is 
+  written into the binary file by the compiler, and you're borrowing a 
+  reference of it. The 'literal' variable below demonstrates this. Even the 
+  string literals that you see in the 'hello' and 'world' declarations are 
+  compiled as <code class="inline-code language-rust">str</code> types.
+</p>
+<pre><code class="language-rust">let literal: &ampstr = "Literally a string";
+let hello: String = String::from("Hello");
+let world: String = "world!".to_string();
+println!("{hello} {world}");
+</code></pre>
+<p>
+  As stated in the paragraph above, you can see the string literals in the 
+  binary, if you want. Compiling the code snip above and viewing the contents
+  of the binary file in a text editor may reveal something like:
+</p>
+<code class="inline-code">^@^@^@^@^@^@^@^@^@^@^@Literally a stringHelloworld!
+</code>
+<p>
+  This works when compiling on Linux, and viewing the binary file in Neovim.
+</p>
+<h3>Updating Strings</h3>
+<h4>push_str() and push()</h4>
+<p>
+  There are a few ways to insert new values into a string, just like you can 
+  do to a Vector. One common way is to use the 
+  <code class="inline-code language-rust">push_str()</code> method. This method
+  takes a string slice <code class="inline-code language-rust">&ampstr</code>,
+  because we don't necessarily want the method to take ownership of the string.
+
+</p>
+<pre><code class="language-rust">let mut s1 = String::from("foo");
+let s2 = "bar";
+s1.push_str(s2);
+println!("s2 is {s2}");
+</code></pre>
+<p>
+  In the code snip above, if 
+  <code class="inline-code language-rust">push_str()</code> took ownership of
+  the string, then it would be discarded after the operation, and the 
+  <code class="inline-code language-rust">println!</code> statement wouldn't 
+  be able to access <code class="inline-code">s2</code>.
+</p>
+<p>
+  If you ever need to push a single character onto a string, then you should
+  use the <code class="inline-code language-rust">push()</code> method. 
+  Remember, that single characters are defined in single quotes, like 
+  <code class="inline-code language-rust">'A'</code>.
+</p>
+<pre><code class="language-rust">let mut s = String::from("lo");
+s.push('l');
+</code></pre>
+<h4>Concatonating with + and the format! Macro</h4>
+<p>
+  Sometimes you may want to combine 2 strings together. You can do this with 
+  the <code class="inline-code">+</code> operator. Doing this will perform a 
+  move, and you will lose access to one of the string values. You also need
+  to use a string slice on the right side of the operator. This is because 
+  using <code class="inline-code">+</code> calls the 
+  <code class="inline-code language-rust">add()</code> method, and the 
+  signature of <code class="inline-code language-rust">add()</code> looks like
+  this: 
+</p>
+<pre><code class="language-rust">fn add(self, s: &str) -> String {
+</code></pre>
+<p>
+  The code snippet below demonstrates the use of the 
+  <code class="inline-code">+</code> operator. In the example, we're combining
+  a reference to <code class="inline-code">s2</code> 
+</p>
+<pre><code class="language-rust">let s1 = String::from("Hello, ");
+let s2 = String::from("world!");
+let s3 = s1 + &amps2; // note s1 has been moved here and can no longer be used
+</code></pre>
+<p>
+  Using several <code class="inline-code">+</code> operators could get ugly.
+  The following line looks confusing, and hard to read because of the 
+  combination of plus signs and double quotes. 
+</p>
+<pre><code class="language-rust">let s = s1 + "-" + &amps2 + "-" + &amps3;
+</code></pre>
+<p>
+  A solution is to use the 
+  <code class="inline-code language-rust">format!</code> macro to combine 
+  strings. It works the same way as the 
+  <code class="inline-code language-rust">println!</code> macro.
+</p>
+<pre><code class="language-rust">let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = format!("{s1}-{s2}-{s3}");
+</code></pre>
+<p>
+  That looks much cleaner than the previous method, using multiple plus signs.
+</p>
+
+<h3>Indexing into strings</h3>
+<p>
+  Unlike many other programming languages, Rust does not support indexing into
+  strings with brackets. The line of code below is invalid.
+</p>
+<pre><code class="language-rust">let s1 = String::from("hello");
+let h = s1[0];  // This line throws a compiler error
+</code></pre>
+<pre class="terminal-code"><code>$ cargo run
+   Compiling collections v0.1.0 (file:///projects/collections)
+error[E0277]: the type `str` cannot be indexed by `{integer}`
+ --&gt src/main.rs:3:16
+  |
+3 |     let h = s1[0];
+  |                ^ string indices are ranges of `usize`
+  |
+  = help: the trait `SliceIndex&ltstr&gt` is not implemented for `{integer}`, which is required by `String: Index&lt_&gt`
+  = note: you can use `.chars().nth()` or `.bytes().nth()`
+          for more information, see chapter 8 in The Book: &lthttps://doc.rust-lang.org/book/ch08-02-strings.html#indexing-into-strings&gt
+  = help: the trait `SliceIndex&lt[_]&gt` is implemented for `usize`
+  = help: for that trait implementation, expected `[_]`, found `str`
+  = note: required for `String` to implement `Index&lt{integer}&gt`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `collections` (bin "collections") due to 1 previous error
+</code></pre>
+<p>
+  This happens because the way that 
+  <code class="inline-code language-rust">String</code> types are implemented 
+  in Rust. A <code class="inline-code language-rust">String</code> type is just
+  a wrapper around a <code class="inline-code language-rust">Vec&ltu8&gt</code>
+</p>
+<div class="quote-wrapper">
+  <blockquote>
+    A String is a wrapper over a Vec&ltu8&gt. Let’s look at some of our 
+    properly encoded UTF-8 example strings from Listing 8-14. First, this one:
+    <pre><code class="language-rust">let hello = String::from("Hola");</code></pre>
+    In this case, len will be 4, which means the vector storing the string "
+    Hola" is 4 bytes long. Each of these letters takes one byte when encoded 
+    in UTF-8. The following line, however, may surprise you (note that this 
+    string begins with the capital Cyrillic letter Ze, not the number 3):
+<pre><code class="language-rust">let hello = String::from("Здравствуйте");</code></pre>
+    If you were asked how long the string is, you might say 12. In fact, Rust’s
+    answer is 24: that’s the number of bytes it takes to encode 
+    “Здравствуйте” in UTF-8, because each Unicode scalar value in that string 
+    takes 2 bytes of storage. Therefore, an index into the string’s bytes 
+    will not always correlate to a valid Unicode scalar value. To demonstrate, 
+    consider this invalid Rust code:
+    <pre><code class="language-rust">let hello = "Здравствуйте";
+let answer = &hello[0];
+    </code></pre>
+    You already know that answer will not be З, the first letter. When 
+    encoded in UTF-8, the first byte of З is 208 and the second is 151, so it 
+    would seem that answer should in fact be 208, but 208 is not a valid 
+    character on its own. Returning 208 is likely not what a user would want 
+    if they asked for the first letter of this string; however, that’s the 
+    only data that Rust has at byte index 0. Users generally don’t want the 
+    byte value returned, even if the string contains only Latin letters: if 
+    &amp"hello"[0] were valid code that returned the byte value, it would 
+    return 104, not h.
+  </blockquote>
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch08-02-strings.html#concatenation-with-the--operator-or-the-format-macro#internal-representation">
+   -- The book: Chapter 8.2 
+  </a>
+</div>
+<p>
+  Indexing into a string is a bad idea because it's not clear what the return 
+  type of the string-indexing is. Rather than indexing with 
+  <code class="inline-code">[]</code> and a single number, you can provide a 
+  range with <code class="inline-code">..</code>. Like the example below
+</p>
+<pre><code class="language-rust">let hello = "Здравствуйте";
+let s = &amphello[0..4];
+</code></pre>
+
+<h5>String Demo Source Code</h5>
+<pre><code class="language-rust">let mut name: String = String::from("");
+name.push_str("dpad");
+
+// Add a single character
+name.push('_');
+
+// Add a number to the username
+let num: u8 = 29;
+name.push_str(&ampformat!("{num}")); 
+
+// Slice a string 
+let original: &ampstr = &ampname[0..4];
+
+// Display the user name, the hard way.
+// This demonstrates how to iterate through a string
+for (i, c) in name.chars().enumerate() {
+    print!("{c}");
+    if i == name.len() - 1 {
+        println!();
+    }
+}
+</code></pre>
+
+
+<h2>Hash Maps</h2>
+<p>
+  Hash maps in Rust are used to store key-value pairs, like a Javascript
+  object, or a Python dictionary. Although it's not nearly as simple as that.
+  One way to create an empty hash map is to use the 
+  <code class="inline-code language-rust">new()</code> method, then create it's 
+  values with the <code class="inline-code language-rust">insert()</code> 
+  method. Note that the hash maps are not included in the prelude, like 
+  vectors and strings are. They aren't as common, and therefore not included 
+  by default. You myst include it with 
+  <code class="inline-code language-rust">use</code>
+</p>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+</code></pre>
+<p>
+  Hash maps are homogeneous. All keys must be the same type, and all of the 
+  values must be the same time. The keys do not need to be the same time as 
+  values, however.
+</p>
+
+<h3>Accessing Values in a Hash Map</h3>
+<p>
+  We can fetch values of a hash map by calling the 
+  <code class="inline-code language-rust">get()</code> method. 
+</p>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+
+let team_name = String::from("Blue");
+let score = scores.get(&ampteam_name).copied().unwrap_or(0);
+</code></pre>
+<h3>Hash Map Ownership</h3>
+<p>
+  For types that implement the 
+  <code class="inline-code language-rust">Copy</code> trait, like 
+  <code class="inline-code language-rust">i32</code>, the values are copied 
+  into the hash map. For owned values like 
+  <code class="inline-code language-rust">String</code>, the values will be 
+  moved and the hash map will be the owner of those values.
+</p>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+let field_name = String::from("Favorite color");
+let field_value = String::from("Blue");
+
+let mut map = HashMap::new();
+map.insert(field_name, field_value);
+// println!("{field_name} {field_value}");  &lt- This line won't compile
+</code></pre>
+<h4>Overwriting a Value</h4>
+<p>
+  You can also use <code class="inline-code language-rust">insert()</code>
+  to overwrite values in a hash map.
+</p>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Blue"), 25);
+
+println!("{scores:?}");
+</code></pre>
+
+<h4>Adding a Key and Value Only If a Key Isn't Present</h4>
+<p>
+  Sometimes you don't want to modify a value if it already exists. Hash maps
+  have a special method called <code class="inline-code">entry</code> that 
+  takes the key you want to check as a parameter. The return type is an 
+  enum called <code class="inline-code">Entry</code> that represents a value
+  that might or might not exist. The <code class="inline-code">Entry</code> 
+  enum has a method called <code class="inline-code">or_insert</code>, which 
+  is defined to return a mutable reference to the value for the corresponding
+  <code class="inline-code language-rust">Entry</code> key, if that key exists,
+  and if not, it inserts the parameter as the new value for this key and 
+  returns a mutable reference to the new value. 
+</p>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+
+scores.entry(String::from("Yellow")).or_insert(50);
+scores.entry(String::from("Blue")).or_insert(50);
+
+println!("{scores:?}");
+</code></pre>
+<h4>Updating a Value Based on the Old Value</h4>
+<p>
+  The code below splits the string literal by whitespace, then loops through 
+  each word, stores the word in a hash map as a key if it doesn't already
+  exist, and if it does exist, then the value is incremented up.
+</p>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+let text = "hello world wonderful world";
+
+let mut map = HashMap::new();
+
+for word in text.split_whitespace() {
+    let count = map.entry(word).or_insert(0);
+    *count += 1;
+}
+
+println!("{map:?}");
+</code></pre>
+
+<div class="quote-wrapper">
+  <blockquote>
+    <h3>Hashing Functions</h3>
+    By default, HashMap uses a hashing function called SipHash that can 
+    provide resistance to denial-of-service (DoS) attacks involving hash 
+    tables1. This is not the fastest hashing algorithm available, but the 
+    trade-off for better security that comes with the drop in performance is 
+    worth it. If you profile your code and find that the default hash 
+    function is too slow for your purposes, you can switch to another 
+    function by specifying a different hasher. A hasher is a type that 
+    implements the BuildHasher trait. We’ll talk about traits and how to 
+    implement them in Chapter 10. You don’t necessarily have to implement 
+    your own hasher from scratch; crates.io has libraries shared by other 
+    Rust users that provide hashers implementing many common hashing 
+    algorithms.
+  </blockquote>
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch08-03-hash-maps.html#hashing-functions">
+    -- The Book: Chapter 8.3
+  </a>
+</div>
+
+<h5>Hash Map Demo Source Code</h5>
+<pre><code class="language-rust">use std::collections::HashMap;
+
+
+pub fn run() {
+    let players: Vec&lt&ampstr&gt = vec!["chad", "brad"];
+    let mut scores: HashMap&gt&ampstr, u8&gt = HashMap::new();
+
+    for p in &ampplayers {
+        scores.insert(p, 0); 
+    }
+
+    // Add points to a players score
+    let count = scores.entry(&ampplayers[0]).or_insert(0);
+    *count += 1;
+
+    println!("{:?}", scores);
+    
+}
+</code></pre>
+
+
+

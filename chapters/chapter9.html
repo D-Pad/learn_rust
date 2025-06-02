@@ -1,0 +1,346 @@
+<h1>Error Handling</h1>
+<p>
+  Rust has features for handling situations in which something goes wrong.
+  In many cases, Rust requires you to acknowledge the possibility of an error,
+  and handle it before your code will compile. Rust groups errors into two 
+  major categories, known as <strong>recoverable</strong> and 
+  <strong>unrecoverable</strong>. An example of a recoverable error could be 
+  failing to find a specific file, while an unrecoverable error could be 
+  something like indexing out of bounds on a vector or an array. 
+</p>
+<p>
+  Rust doesn't have traditional errors, that are handled with <i>exception</i>
+  logic, like the <code class="inline-code">try</code> and 
+  <code class="inline-code">except</code> keywords in Python. Instead, Rust 
+  uses a special type called 
+  <code class="inline-code language-rust">Result&ltT, E&gt</code> values for 
+  recoverable errors, and a special 
+  <code class="inline-code language-rust">panic!</code> macro that stops the 
+  program in the even of a <strong>unrecoverable</strong> error.
+</p>
+
+<h2>Unrecoverable Errors with panic!</h2>
+<p>
+  You can force a panic with the 
+  <code class="inline-code language-rust">panic!</code> macro. By default, a 
+  panic will print a failure message, unwind, clean up the stack, and exit 
+  the program. You can adjust the behavior of a panic with an environment
+  variable <code class="inline-code">RUST_BACKTRACE=1</code>. Check the 
+  example output below, of causing a panic with the 
+  <code class="inline-code language-rust">panic!</code> macro, while using the 
+  traceback environment variable.
+</p>
+<pre class="terminal-code"><code>$ RUST_BACKTRACE=1 cargo run
+<div class="terminal-error">thread 'main' panicked at src/main.rs:4:6:
+index out of bounds: the len is 3 but the index is 99
+stack backtrace:
+   0: rust_begin_unwind
+             at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/std/src/panicking.rs:645:5
+   1: core::panicking::panic_fmt
+             at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/core/src/panicking.rs:72:14
+   2: core::panicking::panic_bounds_check
+             at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/core/src/panicking.rs:208:5
+   3: &ltusize as core::slice::index::SliceIndex&lt[T]&gt&gt::index
+             at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/core/src/slice/index.rs:255:10
+   4: core::slice::index::&ltimpl core::ops::index::Index&ltI&gt for [T]&gt::index
+             at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/core/src/slice/index.rs:18:9
+   5: &ltalloc::vec::Vec&ltT,A&gt as core::ops::index::Index&ltI&gt&gt::index
+             at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/alloc/src/vec/mod.rs:2770:9
+   6: panic::main
+             at ./src/main.rs:4:6
+   7: core::ops::function::FnOnce::call_once
+    at /rustc/07dca489ac2d933c78d3c5158e3f43beefeb02ce/library/core/src/ops/function.rs:250:5</div>
+</code></pre>
+
+<h2>Recoverable Errors with Result</h2>
+<p>
+  Most of the time, errors aren't bad enough to kill the program. Maybe you 
+  don't want to kill your whole program if a server doesn't respond, and 
+  try the request again in a few seconds. That's where the 
+  <code class="inline-code language-rust">Result&ltT, E&gt</code> type comes 
+  in. The <code class="inline-code">T</code> and 
+  <code class="inline-code">E</code> are generic type parameters. In the case 
+  of <code class="inline-code language-rust">Result</code>, the 
+  <code class="inline-code">T</code> is a success, and the 
+  <code class="inline-code">E</code> is a failure.
+</p>
+<pre><code class="language-rust">use std::fs::File;
+
+pub fn run() {
+    // Crash demo 
+    let greet = File::open("hello.txt");
+    
+    match greet {
+        Ok(file) =&gt println!("File found"),
+        Err(error) =&gt println!("File not found")
+    }
+}
+</code></pre>
+
+<h3>Matching on Different Errors</h3>
+<p>
+  The code block above will panic no matter why 
+  <code class="inline-code language-rust">File::open</code> failed. If the file 
+  doesn't exist, it panics, and if there's an error with the file, it also 
+  panics. What if we want to create the file if it doesn't exist, rather than 
+  panic? Look at the sample code below:
+</p>
+<pre><code class="language-rust">use std::fs::File;
+use std::io::ErrorKind;
+
+fn main() {
+    let greeting_file_result = File::open("hello.txt");
+
+    let greeting_file = match greeting_file_result {
+        Ok(file) =&gt file,
+        Err(error) =&gt match error.kind() {
+            ErrorKind::NotFound =&gt match File::create("hello.txt") {
+                Ok(fc) =&gt fc,
+                Err(e) =&gt panic!("Problem creating the file: {e:?}"),
+            },
+            other_error =&gt {
+                panic!("Problem opening the file: {other_error:?}");
+            }
+        },
+    };
+}
+</code></pre>
+
+<div class="quote-wrapper">
+  <blockquote>
+    <p> 
+      The type of the value that 
+      <code class="inline-code language-rust">File::open</code> returns inside 
+      the <code class="inline-code language-rust">Err</code> variant is 
+      <code class="inline-code language-rust">io::Error</code>, which is a 
+      struct provided by the standard library. This struct has a method kind 
+      that we can call to get an 
+      <code class="inline-code language-rust">io::ErrorKind</code> value. The 
+      enum <code class="inline-code language-rust">io::ErrorKind</code> is 
+      provided by the standard library and has variants representing the 
+      different kinds of errors that might result from an io operation. The 
+      variant we want to use is 
+      <code class="inline-code language-rust">ErrorKind::NotFound</code>, which 
+      indicates the file we’re trying to open doesn’t exist yet. So we match on 
+      <code class="inline-code">greeting_file_result</code>, but we 
+      also have an inner match on 
+      <code class="inline-code language-rust">error.kind()</code>.
+    </p>
+    <p>
+      The condition we want to check in the inner match is whether the value 
+      returned by <code class="inline-code language-rust">error.kind()</code> 
+      is the <code class="inline-code language-rust">NotFound</code> 
+      variant of the <code class="inline-code language-rust">ErrorKind</code> 
+      enum. If it is, we try to create the file with 
+      <code class="inline-code language-rust">File::create</code>. However, 
+      because <code class="inline-code language-rust">File::create</code> 
+      could also fail, we need a second arm in the inner match expression. 
+      When the file can’t be created, a different error message is printed. 
+      The second arm of the outer match stays the same, so the program panics 
+      on any error besides the missing file error.
+    </p>
+  </blockquote>
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch09-02-recoverable-errors-with-result.html#matching-on-different-errors">
+    -- The book: Chapter 9.2
+  </a>
+</div>
+
+<h3>Shortcuts for Panic on Error</h3>
+<h4>unwrap()</h4>
+<p>
+  You can use <code class="inline-code language-rust">unwrap()</code> in place 
+  of a <code class="inline-code language-rust">match</code> statement. 
+  <code class="inline-code">unwrap</code> is a method of 
+  <code class="inline-code language-rust">Result</code>. If the 
+  <code class="inline-code language-rust">Result</code> value is 
+  <code class="inline-code language-rust">Ok</code>, then the value is 
+  returned, but if the value is 
+  <code class="inline-code language-rust">Err</code>, then 
+  <code class="inline-code">unwrap</code> will call 
+  <code class="inline-code language-rust">panic!</code>
+</p>
+<pre><code class="language-rust">use std::fs::File;
+
+pub fn run() {
+    let greet = File::open("hello.txt").unwrap(); 
+}
+</code></pre>
+<p>
+  If we run the code block above, without a <i>hello.txt</i> file in the 
+  directory, the code will panic.
+</p>
+<h4>expect()</h4>
+<p>
+  The <code class="inline-code language-rust">expect()</code> method works
+  exactly like <code class="inline-code">unwrap</code>, but you can pass in a 
+  string as a parameter, which will then be handed over to 
+  <code class="inline-code language-rust">panic!</code> instead of using the 
+  default panic message.
+</p>
+<pre><code class="language-rust">use std::fs::File;
+
+
+pub fn run() {
+    let err_msg: &ampstr = "Could not find 'hello.txt'";
+    let greet = File::open("hello.txt").expect(err_msg); 
+}
+</code></pre>
+
+<h3>Propogating Errors</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    When a function’s implementation calls something that might fail, instead 
+    of handling the error within the function itself you can return the error 
+    to the calling code so that it can decide what to do. This is known as 
+    propagating the error and gives more control to the calling code, where 
+    there might be more information or logic that dictates how the error 
+    should be handled than what you have available in the context of your code.
+  </blockquote>
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch09-02-recoverable-errors-with-result.html#propogating-errors">
+    -- The Book: Chapter 9.2
+  </a>
+</div>
+<pre><code class="language-rust">use std::fs::File;
+use std::io::{self, Read};
+
+fn read_username_from_file() -&gt Result&ltString, io::Error&gt {
+    let username_file_result = File::open("hello.txt");
+
+    let mut username_file = match username_file_result {
+        Ok(file) =&gt file,
+        Err(e) =&gt return Err(e),
+    };
+
+    let mut username = String::new();
+
+    match username_file.read_to_string(&ampmut username) {
+        Ok(_) =&gt Ok(username),
+        Err(e) =&gt Err(e),
+    }
+}
+</code></pre>
+<p>
+  The function above returns a 
+  <code class="inline-code language-rust">Result&ltT, E&gt</code>, where the 
+  generic parameter <code class="inline-code">T</code> has been filled in with 
+  the concrete type <code class="inline-code language-rust">String</code>
+  and the generic type <code class="inline-code">E</code> has been filled in 
+  with the concrete type 
+  <code class="inline-code language-rust">io::Error</code>. If the function
+  runs successfully, a 
+  <code class="inline-code">Result&ltString, io::Error&gt</code> is returned. 
+</p>
+<p>
+  Below is a sample code, which includes the function above, with some 
+  renaming. This demonstrates how to read a file, or create it if it doesn't 
+  exist.
+</p>
+<pre><code class="language-rust">use std::fs::File;
+use std::io::{self, Read, Write};
+
+
+fn read_msg_from_file() -&gt Result&ltString, io::Error&gt {
+    let msg_file_result = File::open("hello.txt");
+
+    let mut msg_file = match msg_file_result {
+        Ok(file) =&gt file,
+        Err(e) =&gt return Err(e),
+    };
+
+    let mut msg = String::new();
+
+    match msg_file.read_to_string(&ampmut msg) {
+        Ok(_) =&gt Ok(msg),
+        Err(e) =&gt Err(e),
+    }
+}
+
+
+pub fn run() {
+
+    let file_contents: Result&ltString, io::Error&gt = read_msg_from_file();
+    match file_contents {
+        
+        // If the file is read successfully, then print the contents
+        Ok(msg) =&gt {
+            println!("{msg}");
+        }
+        
+        // If there's an error, handle it.
+        Err(e) =&gt {
+            println!("Failed to read file: {}", e); 
+            match File::create("hello.txt") { 
+                Ok(mut file) =&gt { 
+                    match writeln!(file, "Hello world!") {
+                        Ok(_) =&gt (),
+                        
+                        // If writing the data to the file fails.
+                        Err(e) =&gt {
+                            println!("Failed to write data: {}", e);
+                        }
+                    }
+                }
+                // If file creation fails 
+                Err(e) =&gt {
+                    println!("Failed to create file: {}", e);
+                }
+            };
+        }
+    };
+}
+</code></pre>
+<h3>Shorthand Error Propogating: The ? Operator</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    <p> 
+      The ? placed after a Result value is defined to work in almost the same 
+      way as the match expressions we defined to handle the Result values in 
+      Listing 9-6. If the value of the Result is an Ok, the value inside the 
+      Ok will get returned from this expression, and the program will continue.
+      If the value is an Err, the Err will be returned from the whole 
+      function as if we had used the return keyword so the error value gets 
+      propagated to the calling code.
+    </p>
+    <p>
+      There is a difference between what the match expression from Listing 9-
+      6 does and what the ? operator does: error values that have the ? 
+      operator called on them go through the from function, defined in the 
+      From trait in the standard library, which is used to convert values 
+      from one type into another. When the ? operator calls the from function, 
+      the error type received is converted into the error type defined in 
+      the return type of the current function. This is useful when a function 
+      returns one error type to represent all the ways a function might fail, 
+      even if parts might fail for many different reasons. 
+    </p>
+  </blockquote>
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator">
+    -- The book: Chapter 9.2
+  </a>
+</div>
+<h2>To panic! or Not to panic!</h2>
+<div class="quote-wrapper">
+  <quoteblock>
+    So how do you decide when you should call 
+    <code class="inline-code language-rust">panic!</code> and when you should 
+    return <code class="inline-code language-rust">Result</code> When code 
+    panics, there’s no way to recover. You could call 
+    <code class="inline-code language-rust">panic!</code> for any error 
+    situation, whether there’s a possible way to recover or not, but then 
+    you’re making the decision that a situation is unrecoverable on behalf of 
+    the calling code. When you choose to return a 
+    <code class="inline-code language-rust">Result</code> value, you give the 
+    calling code options. The calling code could choose to attempt to recover 
+    in a way that’s appropriate for its situation, or it could decide that an 
+    <code class="inline-code language-rust">Err</code> value in this case is 
+    unrecoverable, so it can call panic! and turn your recoverable error into 
+    an unrecoverable one. Therefore, returning Result is a good default 
+    choice when you’re defining a function that might fail.     
+  </quoteblock>
+  <a 
+    class="quote-src" 
+    href="https://rust-book.cs.brown.edu/ch09-03-to-panic-or-not-to-panic.html"
+  >
+    -- The Book: Chapter 9.3 
+  </a>
+</div>
+

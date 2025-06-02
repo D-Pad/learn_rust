@@ -1,0 +1,565 @@
+<h1>Managing Growing Projects</h1>
+<p>
+  We touched on this a little bit in the <strong>setup</strong> chapter. Rust 
+  has a number of features that allow you to manage your code’s organization, 
+  including which details are exposed, which details are private, and what 
+  names are in each scope in your programs. These features are sometimes 
+  collectively referred to as the <i>module system</i>, and they include
+  <ul>
+    <li>
+      <strong>Packages:</strong> A Cargo feature that lets you build, test, 
+      and share crates
+    </li>
+    <li>
+      <strong>Crates:</strong> A tree of modules that produces a library
+      or an executable.
+    </li>
+    <li>
+      <strong>Modules</strong> and <strong>use:</strong> Let you control the 
+      organization, scope, and privacy of paths.
+    </li>
+    <li>
+      <strong>Paths:</strong> A way of naming an item, such as a struct, 
+      function, or module.
+    </li>
+  </ul>
+  This chapter will touch a bit on these features and how to use them to 
+  keep your projects clean, and maintainable.
+</p>
+
+<h2>Packages and Crates:</h2>
+<h3>Crates</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    A crate is the smallest amount of code that the Rust compiler considers 
+    at a time. The heirarchy looks like 
+    <code class="inline-code language-rust">package &gt crate &gt module</code> 
+    Even if you run rustc rather than cargo and pass a single source code 
+    file (as we did all the way back in the “Writing and Running a Rust 
+    Program” section of Chapter 1), the compiler considers that file to be a 
+    crate. Crates can contain modules, and the modules may be defined in 
+    other files that get compiled with the crate, as we’ll see in the coming 
+    sections.
+  </blockquote>
+  <a class="quote-src" href="">
+    -- The book: Chapter 7
+  </a>
+</div>
+<h4>Library crates</h4>
+<p>
+  A library crate does not contain a 
+  <code class="inline-code language-rust">main()</code> executable. Instead, 
+  they define functionality intended to be shared with multiple projects. Like
+  the <code class="inline-code">rand</code> crate, that's used to generate 
+  random numbers. Most of the time, Rust programmers are referring to libraries
+  when they talk about crates.
+</p>
+<h3>Packages</h3>
+<p>
+  A package is a bundle of one or more crates that provide a set of 
+  functionality. A package contains a <i>Cargo.toml</i> file that describes
+  how to build those crates. A package can contain as many binary crates as 
+  you like, but at most only one library crate. A package must contain at 
+  least one crate, whether that’s a library or binary crate. Let's walk through
+  what happens when you create a new package...
+</p>
+<p>
+  First, run the command 
+  <code class="inline-code">cargo new my-package-name</code>. Running that 
+  command will initialize a new package crate with a <i>Cargo.toml</i> file.
+  If you inspect the contents of the crate, you'll notice that there is a 
+  <i>src</i> directory, but no mention of <i>src/main.rs</i> in 
+  <i>Cargo.toml</i>. Cargo follows a convention that <i>src/main.rs</i> is 
+  the crate root of a binary crate with the same name as the package. Likewise, 
+  Cargo knows that if the package directory contains <i>src/lib.rs</i>, the 
+  package contains a library crate with the same name as the package, and 
+  <i>src/lib.rs</i> is its crate root. Cargo passes the crate root files to 
+  <code class="inline-code">rustc</code>
+</p>
+<p>
+  Imagine you see a Rust package foobar with the following files:
+<p>
+<pre class="terminal-code"><code>foobar
+├── Cargo.toml
+├── build.rs
+└── src/
+    ├── main.rs
+    ├── util.rs
+    ├── lib.rs
+    └── bin/
+        └── alt.rs
+</code></pre>
+<div class="q-and-a">
+  <p>
+    <strong>Q:</strong> How many crates does this package contain?
+  </p>
+  <p>
+    <strong>A:</strong> 3
+  </p>
+  <p>
+    <i>Context:</i> <code class="inline-code">main.rs</code> produces a binary 
+    crate, <code class="inline-code">lib.rs</code> produces a library crate, 
+    and <code class="inline-code">bin/alt.rs</code> produces a binary crate. 
+    The <code class="inline-code">util.rs</code> would presumably be used as a 
+    module within one of these crates, but it is not a special filename 
+    recognized by Rust, so it would not be its own crate. 
+    <code class="inline-code">build.rs</code> is a build script.
+  </p>
+</div> 
+<h2>Defining Modules to Control Scope and Privacy</h2>
+<p>
+  This section covers the <code class="inline-code language-rust">use</code> 
+  keyword that brings a path into scope; and the 
+  <code class="inline-code language-rust">pub</code> keyword to make items 
+  public. We’ll also discuss the 
+  <code class="inline-code language-rust">as</code> keyword, external packages, 
+  and the glob operator. 
+</p>
+<h3>Modules Cheat Sheet</h3>
+<ul class="cheet-sheet">
+  <li>
+    <strong>Start from the crate root:</strong> When compiling a crate, the 
+    compiler first looks in the crate root file (usually 
+    <code class="inline-code language-rust">src/lib.rs</code> for a 
+    library crate or <code class="inline-code language-rust">src/main.rs</code> 
+    for a binary crate) for code to compile.
+  </li>
+  <li>
+    <strong>Declaring modules:</strong> In the crate root file, you can 
+    declare new modules; say you declare a “garden” module with mod garden. 
+    The compiler will look for the module’s code in these places:
+  </li>
+  <ul> 
+    <li>
+      Inline, within curly brackets that replace the semicolon following mod 
+      garden
+    </li>
+    <li>
+      In the file <code class="inline-code">src/garden.rs</code>
+    </li>
+    <li>
+      In the file <code class="inline-code">src/garden/mod.rs</code>
+    </li>
+  </ul> 
+  <li>
+    <strong>Declaring submodules:</strong> In any file other than the crate 
+    root, you can declare submodules. For example, you might declare mod 
+    vegetables; in <code class="inline-code">src/garden.rs</code>. The 
+    compiler will look for the submodule’s code within the directory named 
+    for the parent module in these places:
+  </li>
+  <ul>
+    <li>
+      Inline, directly following 
+      <code class="inline-code">mod vegetables</code>, within curly brackets 
+      instead of the semicolon
+    </li>
+    <li>
+      In the file <code class="inline-code">src/garden/vegetables.rs</code>
+    </li>
+    <li>
+      In the file <code class="inline-code">src/garden/vegetables/mod.rs</code>
+    </li>
+  </ul> 
+  <li>
+    <strong>Paths to code in modules:</strong> Once a module is part of your 
+    crate, you can refer to code in that module from anywhere else in that 
+    same crate, as long as the privacy rules allow, using the path to the code. 
+    For example, an Asparagus type in the garden vegetables module would be 
+    found at 
+    <code class="inline-code language-rust">
+      crate::garden::vegetables::Asparagus
+    </code>.
+  </li>
+  <li>
+    <strong>Private vs. public:</strong> Code within a module is private from 
+    its parent modules by default. To make a module public, declare it with 
+    <code class="inline-code">pub mod</code> instead of 
+    <code class="inline-code">mod</code>. To make items within a public 
+    module public as well, use <code class="inline-code">pub</code> before 
+    their declarations.
+  </li>
+  <li>
+    <strong>The use keyword:</strong> Within a scope, the 
+    <code class="inline-code">use</code> keyword creates shortcuts to items 
+    to reduce repetition of long paths. In any scope that can refer to 
+    <code class="inline-code language-rust">
+      crate::garden::vegetables::Asparagus
+    </code>, you can create a shortcut with use 
+    <code class="inline-code language-rust">
+      crate::garden::vegetables::Asparagus
+    </code>; and from then on you only need to write Asparagus to make use of 
+    that type in the scope.
+  </li>
+</ul>
+<h3>Sample Module</h3>
+<pre class="terminal-code"><code>backyard
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── garden
+    │   └── vegetables.rs
+    ├── garden.rs
+    └── main.rs
+</code></pre>
+<p>
+  The crate root file in this case is src/main.rs, and it contains:
+</p>
+
+<h6 class="file-name">/src/main.rs</h6>
+<pre><code class="language-rust">use crate::garden::vegetables::Asparagus;
+
+pub mod garden;
+
+fn main() {
+    let plant = Asparagus {};
+    println!("I'm growing {plant:?}!");
+}
+</code></pre>
+<p>
+  The <code class="inline-code language-rust">pub mod garden</code>; line 
+  tells the compiler to include the code it finds in <i>src/garden.rs</i>, 
+  which is: 
+</p>
+<h6 class="file-name">src/garden.rs</h6>
+<code class="inline-code language-rust">pub mod vegetables</code>
+<p>
+  Here, <code class="inline-code">pub mod vegetables;</code> 
+  means the code in <i>src/garden/vegetables.rs</i> is included too. That 
+  code is: 
+</p>
+<h6 class="file-name">src/garden/vegetables.rs</h6>
+<pre><code class="language-rust">#[derive(Debug)]
+pub struct Asparagus {}
+</code></pre>
+
+<h3>Grouping Related Code in Modules</h3>
+<p>
+  Earlier, we mentioned that <i>src/main.rs</i> and <i>src/lib.rs</i> are 
+  called crate roots. The reason for their name is that the contents of 
+  either of these two files form a module named <strong>crate</strong> at the 
+  root of the crate’s module structure, known as the module tree. This means
+  that you can use the keyword 
+  <code class="inline-code language-rust">crate</code> at the start of a path,
+  such as the 
+  <code class="inline-code language-rust">
+    crate::garden::vegetables::Asparagus
+  </code> example from above. 
+</p>
+<h3>The Super Keyword</h3>
+<p>
+  You can use the keyword <code class="inline-code language-rust">super</code>
+  to refer to a the top level module in a module hierarchy. Lets use the 
+  following module as an example.
+</p>
+<pre><code class="language-rust">fn deliver_order() {}
+
+mod back_of_house {
+    fn fix_incorrect_order() {
+        cook_order();
+        super::deliver_order();
+    }
+
+    fn cook_order() {}
+}
+</code></pre>
+<p>
+  The <code class="inline-code">fix_incorrect_order</code> function is in the 
+  <code class="inline-code">back_of_house</code> module, so we can use 
+  <code class="inline-code">super</code> to go to the parent module of 
+  <code class="inline-code language-rust">back_of_house</code>, which in this 
+  case is crate, the root. From there, we look for 
+  <code class="inline-code language-rust">deliver_order</code> and find it.
+</p>
+<h3>Privacy with Structs and Enums:</h3>
+<h4>Struct Privacy</h4>
+<p>
+  Making a <code class="inline-code language-rust">struct</code> public, in 
+  the context of a module, is 
+  much different than making an 
+  <code class="inline-code language-rust">enum</code> public. Making a 
+  <strong>struct</strong> public doesn't effect the attributes of the struct. 
+  In fact, all of the attributes are private by default, even if the struct 
+  itself if public. You need to specify the attributes as public as well:
+</p>
+<pre><code class="language-rust">mod person_mod {
+
+    pub struct Person {
+        pub name: String,
+        age: u8
+    }
+    
+    impl Person {
+        pub fn new(name: String, age: u8) -> Self {
+            Self {name, age} 
+        }
+    }
+}
+
+pub fn run() {
+    use person_mod::Person; 
+    let me: Person = person_mod::Person::new(
+        String::from("dpad"),
+        34
+    ); 
+    println!("{}", me.name);
+    // println!("{}", me.age);   This line won't compile
+}
+</code></pre>
+<p>
+  Just as a demonstration, notice how it's legal to access a private attribute 
+  of a struct if the struct is defined in the same module as the code that's 
+  trying to access it private attributes.
+</p>
+<pre><code class="language-rust">struct Person {
+    name: String,
+    age: u8
+}
+
+fn run() {
+    let me: Person = Person {
+        name: String::from("dpad"),
+        age:34 
+    };
+    println!("Name and age: {} | {}", me.name, me.age);
+}
+</code></pre>
+<h4>Enum Privacy</h4>
+<p>
+  By contrast, if you make an enum public within a module, the enum and all 
+  of it's variants are public. The code below compiles just fine.
+</p>
+<pre><code class="language-rust">mod back_of_house {
+    pub enum Appetizer {
+        Soup,
+        Salad,
+    }
+}
+
+pub fn eat_at_restaurant() {
+    let order1 = back_of_house::Appetizer::Soup;
+    let order2 = back_of_house::Appetizer::Salad;
+}
+</code></pre>
+<h2>The use keyword</h2>
+<p>
+  Take a look at the code block below. 
+</p>
+<pre><code class="language-rust">mod restaurant {
+    pub mod kitchen {
+        pub fn cook_burgers(how_many: u8) {
+            println!("Cooking {how_many} burgers");
+        } 
+    }
+}
+
+pub fn run() {
+    restaurant::kitchen::cook_burgers(2); 
+}
+</code></pre>
+<p>
+  It would get repetetive and verbose to write out 
+  <code class="inline-code language-rust">
+    restaurant::kitchen::cook_burgers(1);</code> every time we want to use the 
+  <code class="inline-code language-rust">cook_burgers()</code> function. 
+  Instead, we could bring the cook_burgers function into scope with the 
+  <code class="inline-code language-rust">use</code> keyword like so:
+</p>
+<pre><code class="language-rust">mod restaurant {
+    pub mod kitchen {
+        pub fn cook_burgers(how_many: u8) {
+            println!("Cooking {how_many} burgers");
+        } 
+    }
+}
+
+pub fn run() {
+    use restaurant::kitchen::cook_burgers; 
+    cook_burgers(2); 
+    cook_burgers(4); 
+}
+</code></pre>
+<p>
+  But, bringing the 
+  <code class="inline-code language-rust">cook_burgers()</code> function into 
+  scope isn't an idiomatic way of doing thigs. Instead, it's better to stop at 
+  <code class="inline-code">kitchen</code>. This helps to differentiate 
+  functions within specific modules, or even functions defined in the file 
+  you're working on.
+</p>
+<pre><code class="language-rust">mod restaurant {
+    pub mod kitchen {
+        pub fn cook_burgers(how_many: u8) {
+            println!("Cooking {how_many} burgers");
+        } 
+    }
+}
+
+pub mod gas_station {
+   
+    pub mod store {
+        pub fn buy_gatorade() {
+            println!("Buying gatorade");
+        }
+    }
+
+    pub fn pump_gas(gallons: u8) {
+        println!("Pumping {gallons}");
+    }
+}
+
+fn place_order() {}
+
+pub fn run() {
+    
+    use restaurant::kitchen; 
+    use gas_station::store; 
+    
+    // The origins of these functions are clear. 
+    store::buy_gatorade(); 
+    kitchen::cook_burgers(2); 
+    place_order();
+}
+</code></pre>
+
+<div class="quote-wrapper">
+  <blockquote>
+    <p> 
+      On the other hand, when bringing in structs, enums, and other items 
+      with use, it’s idiomatic to specify the full path. Listing 7-14 shows 
+      the idiomatic way to bring the standard library’s HashMap struct into 
+      the scope of a binary crate.
+    </p>
+    
+    <h3>Filename: src/main.rs</h3>
+    <pre><code class="language-rust">use std::collections::HashMap;
+    
+    fn main() {
+        let mut map = HashMap::new();
+        map.insert(1, 2);
+    }
+    </code></pre>
+    <p>
+      There’s no strong reason behind this idiom: it’s just the convention 
+      that has emerged, and folks have gotten used to reading and writing 
+      Rust code this way.
+    </p>
+    <p>
+      The exception to this idiom is if we’re bringing two items with the 
+      same name into scope with use statements, because Rust doesn’t allow 
+      that. Listing 7-15 shows how to bring two Result types into scope that 
+      have the same name but different parent modules, and how to refer to 
+      them.
+    </p>
+
+    <h3>Filename: src/lib.rs</h3>
+    <pre><code class="language-rust">use std::fmt;
+use std::io;
+
+fn function1() -> fmt::Result {
+    // --snip--
+}
+
+fn function2() -> io::Result<()> {
+    // --snip--
+}</code></pre>
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch07-04-bringing-paths-into-scope-with-the-use-keyword.html">
+    -- The book: Chapter 7.4 
+  </a>
+</div>
+<h3>The as keyword</h3>
+<p>
+  Another solution to the problem we just discussed, is to alias the items 
+  that you're bringing into scope, with the 
+  <code class="inline-code language-rust">as</code> keyword.
+</p>
+<pre><code class="language-rust">use std::fmt;
+use std::io as IoResult;
+
+fn function1() -> Result {
+    // --snip--
+}
+
+fn function2() -> IoResult<()> {
+    // --snip--
+}</code></pre>
+<h3>Bring multiple items from same module into scope</h3>
+<p>
+  Sometimes you may want to use multiple modules from the same parent module. 
+  Rather than writing multiple <strong>use</strong> statements on several 
+  lines, you can use curely braces as a shorthand. The two code 
+  blocks below are functionaly identical.
+</p>
+<pre><code class="language-rust">use std::cmp::Ordering;
+use std::io;
+</code></pre>
+<pre><code class="language-rust">use std::{cmp::Ordering, io};
+</code></pre>
+<p>
+  So are these...
+</p>
+<pre><code class="language-rust">use std::io;
+use std::io::Write;
+</code></pre>
+<pre><code class="language-rust">use std::io::{self, Write};
+</code></pre>
+<div class="quote-wrapper">
+  <blockquote>
+    <h3>The Glob Operator</h3>
+    <p>   
+      If we want to bring all public items defined in a path into scope, we 
+      can specify that path followed by the * glob operator:
+    </p>
+
+    <pre><code class="language-rust">use std::collections::*;
+    </code></pre>
+    <p>
+      This use statement brings all public items defined in std::collections 
+      into the current scope. Be careful when using the glob operator! Glob 
+      can make it harder to tell what names are in scope and where a name 
+      used in your program was defined.
+    </p>
+  </blockquote> 
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch07-04-bringing-paths-into-scope-with-the-use-keyword.html">
+    -- The book: Chapter 7.4 
+  </a>
+</div>
+<h3>Source code</h3>
+<p>
+  Here's a sample code, written while reading chapter 7 of the book:
+</p>
+<pre><code class="language-rust">mod restaurant {
+    pub mod kitchen {
+        pub fn cook_burgers(how_many: u8) {
+            println!("Cooking {how_many} burgers");
+        } 
+    }
+}
+
+pub mod gas_station {
+   
+    pub mod store {
+        pub fn buy_gatorade() {
+            println!("Buying gatorade");
+        }
+    }
+
+    pub fn pump_gas(gallons: u8) {
+        println!("Pumping {gallons}");
+    }
+}
+
+fn place_order() { println!("Ordering a burger");}
+
+pub fn run() {
+    use restaurant::kitchen; 
+    use gas_station::store; 
+    store::buy_gatorade(); 
+    place_order();
+    kitchen::cook_burgers(2); 
+}
+</code></pre>
+
+
+

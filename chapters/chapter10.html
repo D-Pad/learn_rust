@@ -1,0 +1,41 @@
+<h1>Generics, Traits, and Lifetimes</h1>
+<p>
+  As the title suggests, this chapter will cover generic types, traits, and 
+  lifetimes. According to the book, every programming language has it's own 
+  way of managing the duplication of concepts. In Rust, one of these methods
+  are called <i>generics</i>: abstract stand-ins for concrete types or other
+  properties. We can express the behavior of generics without knowing what will
+  be in their place at compile time. You've already seen generics in previous
+  chapters, such as <code class="inline-code">Vec&ltT&gt</code>,
+  <code class="inline-code">Option&ltT&gt</code>, 
+  <code class="inline-code">HashMap&ltK, V&gt</code>, and 
+  <code class="inline-code">Result&ltT, E&gt</code>. This 
+  chapter will explain how to make your own generics
+</p>
+<p>
+  Generics can help remove code duplication by allowing us to substitute one
+  of several different types as input parameters. For example, imagine you
+  have a function that looks for the largest number in a list:
+</p>
+<pre><code class="language-rust">fn largest_i32(list: &[i32]) -> &i32 {
+    let mut largest = &list[0];
+
+    for item in list {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+</code></pre>
+<p>
+  If you wanted to then use this function to find the largest value in a list 
+  of <code class="inline-code">char</code> types, then you'd need another 
+  function, with the exact same body, but with a different input parameter 
+  type (<code class="inline-code">list: &[char]</code>), and a different 
+  return type. Here is what that function signature would look like.
+</p>
+<pre><code class="language-rust">fn largest_char(list: &[char]) -> &char {
+</code></pre>
+

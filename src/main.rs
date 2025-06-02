@@ -2,9 +2,11 @@
 // learning project, there will be many unused files over time.
 #![allow(dead_code, unused_variables)]
 
+mod testing;
 mod the_book;
 
+
 fn main() {
-    the_book::testing::run();
+    the_book::chapter_9::run();
 }
 

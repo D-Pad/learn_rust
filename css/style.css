@@ -68,6 +68,10 @@ ol {
   padding: 0px;
 }
 
+.cheet-sheet li {
+  margin-bottom: 10px; 
+}
+
 .bullet-item {
   list-style-type: circle;
 }
@@ -77,6 +81,16 @@ ol {
   border-radius: 4px;
   background-color: #333;
   font-size: 10pt;
+  white-space: nowrap;
+}
+
+.q-and-a {
+  margin-left: 20px;
+}
+
+.q-and-a strong,
+.q-and-a i {
+  color: var(--myCyan);
 }
 
 /* Style info for page mounting */
@@ -126,7 +140,7 @@ ol {
 }
 
 #right-panel {
-  margin: 40px auto 0px auto; 
+  margin: 20px auto 0px auto; 
   max-width: var(--max-page-content-width);
 }
 
@@ -193,6 +207,10 @@ blockquote p {
   color: var(--myGreen);
   background-color: #333;
   padding-left: 20px;
+  overflow: auto;
+}
+.terminal-error {
+  color: var(--myRed);
 }
 
 .file-name {

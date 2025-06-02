@@ -4,16 +4,8 @@ pub mod chapter_3;
 pub mod chapter_4;
 pub mod chapter_5;
 pub mod chapter_6;
-pub mod testing;
+pub mod chapter_7;
+pub mod chapter_8;
+pub mod chapter_9;
 
-
-pub fn introduction() {
-    let div: &str = &String::from("--------------------------------"); 
-    println!(
-        "{}\nThe Rust Cheat Sheet\nbased on the book\n{}",
-        div,
-        div
-    );
-    println!("Check the README files in each\nchapter for detailed info");
-}
 
