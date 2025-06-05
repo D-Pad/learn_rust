@@ -118,7 +118,7 @@ ol {
 }
 
 #left-panel {
-  width: 20vh; 
+  width: 25vh; 
   height: 100vh;
   background-color: var(--panelColor); 
   overflow-y: auto;
@@ -129,14 +129,18 @@ ol {
   margin-bottom: 3px;
 }
 
-.left-panel-button {
+.left-panel-button, .left-panel-button-sub {
   padding: 5px 15px 5px 20px;
   list-style-type: none;
   margin: 0px;
 }
 
-.left-panel-button:hover {
+.left-panel-button:hover, .left-panel-button-sub:hover {
   background-color: var(--panelHoverColor); 
+}
+
+.left-panel-button-sub {
+  padding-left: 40px;
 }
 
 #right-panel {

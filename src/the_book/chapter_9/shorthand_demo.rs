@@ -14,7 +14,7 @@ fn read_msg_from_file() -> Result<String, io::Error> {
 }
 
 
-fn read_or_create_file() {
+fn create_file() {
 
     let file_contents: Result<String, io::Error> = read_msg_from_file();
     if let Err(e) = file_contents {
@@ -31,11 +31,21 @@ fn read_or_create_file() {
         };
     
     } else {
-        Ok(msg)
+        () 
     }
 }
 
-pub fn run() {
-    read_or_create_file();
+pub fn run() -> String {
+    // Try to read the file 
+    let mut msg = read_msg_from_file();
+    
+    // If there's a file error, then it probably doesn't exist. Call the 
+    // create function, and read it again.
+    if let Err(e) = &msg {
+        create_file();
+    } else { 
+        msg = read_msg_from_file(); 
+    }
+    msg.expect("Could not read file")
 }
 
