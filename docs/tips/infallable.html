@@ -1,0 +1,20 @@
+<h2>Infallable Type</h2>
+<p>
+  Infallable is an enum with no ways to instantiate it, which isn't ordinarily
+  allowed. It is sometimes used as the return value of a function that can 
+  never return.
+</p>
+<pre><code class="language-rust">pub enum Infallible {}
+</code></pre>
+<p>
+  Useful for functions that run in an infinite loop, like an HTTP server.
+</p>
+<pre><code class="language-rust">fn t_1000() -> Infallible {
+    loop {
+        seek_humans();
+        kill_humans();
+    }
+}
+</code></pre>
+
+

@@ -6,7 +6,7 @@ const toggleState = {};
 
 // Function for loading new page content
 const loadPage = async (chapterName) => {
-  const filePath = `chapters/${chapterName}.html`;
+  const filePath = `docs/${chapterName}.html`;
 
   fetch(filePath)
     .then(response => {

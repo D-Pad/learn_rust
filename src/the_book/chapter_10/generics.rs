@@ -31,6 +31,9 @@ impl<T> Point<T> {
 
 
 pub fn run() {
+   
+    println!("\n--- Generics ---");
+
     let integer = Point { x: 5, y: 7 };
     let floats = Point { x: 1.2, y: 3.14 };
     

@@ -1,0 +1,600 @@
+<h1>Generics, Traits, and Lifetimes</h1>
+<h2>Generics</h2>
+<p>
+  As the title suggests, this chapter will cover generic types, traits, and 
+  lifetimes. According to the book, every programming language has it's own 
+  way of managing the duplication of concepts. In Rust, one of these methods
+  are called <i>generics</i>: abstract stand-ins for concrete types or other
+  properties. We can express the behavior of generics without knowing what will
+  be in their place at compile time. You've already seen generics in previous
+  chapters, such as <code class="inline-code">Vec&ltT&gt</code>,
+  <code class="inline-code">Option&ltT&gt</code>, 
+  <code class="inline-code">HashMap&ltK, V&gt</code>, and 
+  <code class="inline-code">Result&ltT, E&gt</code>. This 
+  chapter will explain how to make your own generics
+</p>
+<p>
+  Generics can help remove code duplication by allowing us to substitute one
+  of several different types as input parameters. For example, imagine you
+  have a function that looks for the largest number in a list:
+</p>
+<pre><code class="language-rust">fn largest_i32(list: &[i32]) -> &i32 {
+    let mut largest = &list[0];
+
+    for item in list {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+</code></pre>
+<p>
+  If you wanted to then use this function to find the largest value in a list 
+  of <code class="inline-code">char</code> types, then you'd need another 
+  function, with the exact same body, but with a different input parameter 
+  type (<code class="inline-code">list: &[char]</code>), and a different 
+  return type. Here is what that function signature would look like.
+</p>
+<pre><code class="language-rust">fn largest_char(list: &[char]) -> &char {
+</code></pre>
+<p>
+  When we use a parameter in the body of a function, we have to declare it in 
+  the function signature. Similarly, when using generic types in a function
+  body, we have to declare the generic types in 
+  <code class="inline-code language-rust">&lt&gt</code> brackets. Here's what 
+  the signature of the function above would look like if it were rewritten with 
+  generic types.
+</p>
+<pre><code class="language-rust">fn largest<T>(list: &[T]) -> &T {
+</code></pre>
+<p>
+  That alone, is not enough, however. The function signature would throw a 
+  compiler error. Below is an explanation on why that would happen.
+</p>
+<div class="quote-wrapper">
+  <blockquote>
+     <p> 
+      The issue above is that when largest takes a slice 
+      <code class="inline-code">&amp[T]</code> as input, the 
+      function cannot assume anything about the type 
+      <code class="inline-code">T</code>. It could be 
+      <code class="inline-code">i32</code>, it could be 
+      <code class="inline-code">String</code>, it could be 
+      <code class="inline-code">File</code>. However, largest 
+      requires that <code class="inline-code">T</code> is something you can 
+      compare with <code class="inline-code">&gt</code> (i.e. that 
+      <code class="inline-code">T</code> implements 
+      <code class="inline-code">PartialOrd</code>, a trait which we will 
+      discuss in the next section). Some types like 
+      <code class="inline-code">i32</code> and 
+      <code class="inline-code">String</code> are comparable, but other types 
+      like <code class="inline-code">File</code> are not comparable.
+    </p>
+    <p> 
+      In a language like C++ with templates, the compiler would not complain 
+      about the implementation of largest, but instead it would complain 
+      about trying to call largest on e.g. a file slice 
+      <code class="inline-code">&[File]</code>. Rust instead requires you to 
+      state the expected capabilities of generic types up front. If 
+      <code class="inline-code">T</code> needs to be comparable, then largest 
+      must say so. Therefore this compiler error says largest will not 
+      compile until <code class="inline-code">T</code> is restricted.
+    </p>
+    <p>
+      Additionally, unlike languages like Java where all objects have a set 
+      of core methods like 
+      <code class="inline-code">Object.toString()</code>, there are no core 
+      methods in Rust. Without restrictions, a generic type 
+      <code class="inline-code">T</code> has no capabilities: it cannot be 
+      printed, cloned, or mutated (although it can be dropped).
+    </p>
+  </blockquote>
+  <a class="quote-src" href="https://rust-book.cs.brown.edu/ch10-01-syntax.html">
+    -- The book: Chapter 10.1
+  </a>
+</div>
+<h2>Generics in Struct Definitions</h2>
+<p>
+  We cand define structs to use a generic type parameter in one or more fields 
+  using the <code class="inline-code">&lt&gt</code> syntax. Notice how the two
+  point structs in the <code class="inline-code language-rust">main()</code>
+  function use different data types (int and float) for their coordinates.
+  This is only possible because of the generic types used in the Struct 
+  definition.
+</p>
+<pre><code class="language-rust">struct Point<T> {
+    x: T,
+    y: T,
+}
+
+fn main() {
+    let integer = Point { x: 5, y: 10 };
+    let float = Point { x: 1.0, y: 4.0 };
+}
+</code></pre>
+<p>
+  Using a single generic type is fine for the example above, but if you expect 
+  mixed types, then you need to provide more generic parameters.
+</p>
+
+<pre><code class="language-rust">struct Point&ltT&gt {
+    x: T,
+    y: T
+}
+
+
+// Using a combination of data types requires the 
+// use of multiple generic types in the signature 
+struct ComboPoint&ltT, U&gt {
+    x: T,
+    y: U
+}
+
+
+pub fn run() {
+    let integer = Point { x: 5, y: 7 };
+    let floats = Point { x: 1.2, y: 3.14 };
+    let combo = ComboPoint { x: 2, y: 5.3 };
+    let not_combo = ComboPoint { x: 1, y: 1 }; 
+}
+</code></pre>
+<p>
+  Generics can be used in enums, and method definitions as well.
+</p>
+<pre><code class="language-rust">struct Point&ltT&gt {
+    x: T,
+    y: T,
+}
+
+impl&ltT&gt Point&ltT&gt {
+    fn x(&ampself) -> &ampT {
+        &ampself.x
+    }
+}
+
+fn main() {
+    let p = Point { x: 5, y: 10 };
+    println!("p.x = {}", p.x());
+}
+</code></pre>
+
+<h2>Traits</h2>
+<p>
+  A <i>trait</i> defines the functionality that a particular type has, and can 
+  share that funcionality with other types. <i>Traits</i> are used to 
+  define shared behaviour in an abstract way. A type’s behavior consists of 
+  the methods we can call on that type. Different types share the same 
+  behavior if we can call the same methods on all of those types. 
+</p>
+<p>
+  When defining a trait, you don't define it's behavior. All types that 
+  implement this trait must define their own behaviors for that trait. 
+  A trait can have multiple methods in its body: the method signatures are 
+  listed one per line, and each line ends in a semicolon. The compiler will 
+  enforce all types with the Summary trait to provide their own methods with 
+  the exact same signature.
+</p>
+<pre><code class="language-rust">trait PersonTitle {
+    fn get_title(&self) -&gt String; 
+}
+
+
+struct Civilian {
+    name: String
+}
+
+impl PersonTitle for Civilian {
+    fn get_title(&ampself) -&gt String {
+        let mut title: String = String::from("Mr. ");
+        title.push_str(&ampself.name);
+        title
+    }
+}
+
+
+struct Doctor {
+    name: String
+}
+
+impl PersonTitle for Doctor {
+    fn get_title(&ampself) -&gt String {
+        let mut title: String = String::from("Dr. ");
+        title.push_str(&ampself.name);
+        title
+    }
+}
+</code></pre>
+<p>
+  Implementing a trait is almost identical to implementing methods normal 
+  methods, except you have to use the <code class="inline-code">for</code>
+  keyword after the name of the trait, to identify the 
+  <code class="inline-code">struct</code> or 
+  <code class="inline-code">enum</code> that you're implementing the trait on.
+</p>
+<h3>Default Implementations</h3>
+<p>
+  It's also possible to define a default behavior for a trait instead of
+  requiring an explicit implementation for each type that implements the 
+  trait. Defining a default behaviors are as simple as adding a code block 
+  after the trait sigature.
+</p>
+<pre><code class="language-rust">trait PersonTitle {
+    fn get_title(&self) -&gt String {
+        String::from("Default string")
+    }; 
+}
+</code></pre>
+<h2>Traits as parameters</h2>
+<p>
+  Traits are used to define functions that can accept many different types
+  as input parameters.
+</p>
+<pre><code class="language-rust">pub fn notify(item: &impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+</code></pre>
+<p>
+  The function above will work with any type that implements the Summary 
+  trait. Instead of defining the input parameter as some specific data type,
+  we set the type as <code class="inline-code">&ampimpl Summary</code>. This
+  means that we can pass in any data type that implements the Summary 
+  <i>trait</i>. The syntax in the code block above works, but it's just 
+  syntax sugar for a long form known as a <i>trait bound</i>. 
+</p>
+<pre><code class="language-rust">pub fn notify&ltT: Summary&gt(item: &ampT) {
+    println!("Breaking news! {}", item.summarize());
+}
+</code></pre>
+<p>
+  This longer form is equivalent to the example in the previous section but 
+  is more verbose. We place trait bounds with the declaration of the generic 
+  type parameter after a colon and inside angle brackets. The shorter syntax 
+  may seem like the obvious choice to make, but the more verbose syntax can 
+  end up being less verbose if there are more input parameters. Look at the 
+  two samples below, then imagine an function signature with 4 or 5 inputs.
+</p>
+<pre><code class="language-rust">pub fn notify(item1: &ampimpl Summary, item2: &ampimpl Summary) {}
+</code></pre>
+<pre><code class="language-rust">pub fn notify&ltT: Summary&gt(item1: &ampT, item2: &ampT) {}
+</code></pre>
+<p>
+  The second example may actually be necessary in some cases, if you want need
+  to force both input parameters to be of the same generic type.
+</p>
+
+<h3>Specifying Multiple Trait Bounds with the + Syntax</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    We can also specify more than one trait bound. Say we wanted notify to use 
+    display formatting as well as summarize on item: we specify in the notify 
+    definition that item must implement both Display and Summary. We can do so 
+    using the + syntax:
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch10-02-traits.html#specifying-multiple-trait-bounds-with-the--syntax" class="quote-src">
+    -- The Book: Chapter 10.2 
+  </a>
+</div>
+<p>
+  Both of the function signatures below are valid.
+</p>
+<pre><code class="language-rust">pub fn notify(item: &amp(impl Summary + Display)) {
+</code></pre>
+<pre><code class="language-rust">pub fn notify&ltT: Summary + Display&gt(item: &ampT) {
+</code></pre>
+
+<h3>Clearer Trait Bounds with where Clauses</h3>
+<p>
+  Here's a new keyword for you... <code class="inline-code">where</code>
+</p>
+
+<div class="quote-wrapper">
+  <blockquote>
+    Using too many trait bounds has its downsides. Each generic has its own 
+    trait bounds, so functions with multiple generic type parameters can 
+    contain lots of trait bound information between the function’s name and 
+    its parameter list, making the function signature hard to read. For this 
+    reason, Rust has alternate syntax for specifying trait bounds inside a 
+    where clause after the function signature. So, instead of writing this:
+    <pre><code class="language-rust">fn some_function&ltT: Display + Clone, U: Clone + Debug&gt(t: &ampT, u: &ampU) -> i32 { 
+    </code></pre>
+    we can use a where clause, like this:
+    <pre><code class="language-rust">fn some_function&ltT, U&gt(t: &ampT, u: &ampU) -&gt i32
+where
+    T: Display + Clone,
+    U: Clone + Debug,
+{
+    </code></pre>
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch10-02-traits.html#clearer-trait-bounds-with-where-clauses" class="quote-src">
+    The Book: Chapter 10.2
+  </a>
+</div>
+<h2>Returning Types That Implement Traits</h2>
+<p>
+  It's also possible to return a type that implements a certain trait using
+  the <code class="inline-code">impl Trait</code> syntax:
+</p>
+<pre><code class="language-rust">fn returns_summarizable() -&gt impl Summary {
+    SocialPost {
+        username: String::from("horse_ebooks"),
+        content: String::from(
+            "of course, as you probably already know, people",
+        ),
+        reply: false,
+        repost: false,
+    }
+}
+</code></pre>
+
+<h3>Using Trait Bounds To Conditionally Implement Methods</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    <p> 
+      By using a trait bound with an impl block that uses generic type 
+      parameters, we can implement methods conditionally for types that 
+      implement the specified traits. For example, the type 
+      <code class="inline-code">Pair&ltT&gt</code> in Listing 10-15 always 
+      implements the new function to return a new instance of 
+      <code class="inline-code">Pair&ltT&gt</code> (recall from the “Defining 
+      Methods” section of Chapter 5 that Self is a type alias for the type of 
+      the <code class="inline-code">impl</code> block, which in this case is 
+      <code class="inline-code">Pair&ltT&gt</code>). But in the next impl 
+      block, <code class="inline-code">Pair&ltT&gt</code> only implements the 
+      <code class="inline-code">cmp_display</code> method if its inner 
+      type <code class="inline-code">T</code> implements the 
+      <code class="inline-code">PartialOrd</code> trait that enables comparison 
+      <i>and</i> the <code class="inline-code">Display</code> trait that 
+      enables printing.
+    </p>
+    <p>
+      We can also conditionally implement a trait for any type that 
+      implements another trait. Implementations of a trait on any type that 
+      satisfies the trait bounds are called <i>blanket implementations</i> 
+      and are used extensively in the Rust standard library. For example, the 
+      standard library implements the <code class="inline-code">ToString</code>
+      trait on any type that implements the 
+      <code class="inline-code">Display</code> trait. The impl block in the 
+      standard library looks similar to this code:
+    </p>
+    <pre><code class="language-rust">impl&ltT: Display&gt ToString for T {
+    // --snip--
+}
+    </code></pre>
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch10-02-traits.html#using-trait-bounds-to-conditionally-implement-methods" class="quote-src">
+    -- The Book: 10.2
+  </a>
+</div>
+
+<h2>Lifetimes</h2>
+<h3>Validating References with Lifetimes</h3>
+<p>
+  Lifetimes are another generic type that we've already been using. While 
+  generics and traits allow us to require that a specific type has the correct
+  behavior we want, <i>lifetimes</i> let us ensure that a reference is valid
+  for as long as it needs to be. Most of the time, lifetimes are implicit and 
+  inferred, just like most of the time, types are inferred. We are only 
+  required to annotate types when multiple types are possible. In a similar 
+  way, we have to annotate lifetimes when the lifetimes of references could 
+  be related in a few different ways. Rust requires us to annotate the 
+  relationships using generic lifetime parameters to ensure the actual 
+  references used at runtime will definitely be valid.
+</p>
+<h2>Preventing Dangling References With Lifetimes</h2>
+<p>
+  The main aim of lifetimes is to prevent dangling references, which is when 
+  a program references data that it's not supposed to reference. The 
+  borrow checker ensures that all data outlives its references. Lifetime 
+  annotations don't change how long a reference lives, rather, they describe
+  the relationships of the lifetimes of multiple references to each other 
+  without affecting the lifetimes.
+</p>
+<h2>Lifetime Annotation Syntax</h2>
+<p>
+  Lifetimes require an <code class="inline-code">'</code>, and are usually
+  all lowercase, and very short names. Similar to generic names, that are 
+  often only one letter long. The lifetime annotation comes after the 
+  <code class="inline-code">&amp</code>, with a space, to separate the 
+  annotation from the reference type. 
+</p>
+<h6>Examples:</h6>
+<pre><code class="language-rust">&ampi32        // a reference
+&amp'a i32     // a reference with an explicit lifetime
+&amp'a mut i32 // a mutable reference with an explicit lifetime
+</code></pre>
+<h2>Lifetime Annotations in Function Signatures</h2>
+<p>
+  To use lifetime annotations in function signatures, we need to declare the 
+  generic lifetime parameters inside angle brackets between the function name 
+  and the parameter list, just as we did with generic type parameters.
+
+  We want the signature to express the following constraint: the returned 
+  reference will be valid as long as both the parameters are valid. This is 
+  the relationship between lifetimes of the parameters and the return value. 
+  We’ll name the lifetime 'a and then add it to each reference,
+</p>
+
+<pre><code class="language-rust">fn longest&lt'a&gt(x: &amp'a str, y: &amp'a str) -&gt &amp'a str {
+    if x.len() &gt y.len() { x } else { y }
+}
+</code></pre>
+<p>
+  The function signature now tells Rust that for some lifetime 'a, the 
+  function takes two parameters, both of which are string slices that live at 
+  least as long as lifetime 'a. The function signature also tells Rust that 
+  the string slice returned from the function will live at least as long as 
+  lifetime 'a. 
+</p>
+<h2>Lifetime Annotations in Struct Definitions</h2>
+<p>
+  Structs can be defined with reference types as well, but if you want to do 
+  this, then you must specify a lifetime.
+</p>
+<pre><code class="language-rust">struct ImportantExcerpt&lt'a&gt {
+    part: &amp'a str,
+}
+</code></pre>
+<p>
+  The lifetime annotation means an instance of 
+  <code class="inline-code">ImportantExcerpt</code> can’t outlive the 
+  reference it holds in its part field. Take a look at the source code below.
+  We're creating an instance of 
+  <code class="inline-code">ImportantExcerpt</code> that holds a reference to 
+  a section of text owned by <code class="inline-code">passage</code>. 
+</p>
+<pre><code class="language-rust">struct ImportantExcerpt&lt'a&gt {
+    part: &amp'a str,
+}
+
+pub fn run() {
+    let passage: String = String::from("In a galaxy far, far away");
+    let some_words: &ampstr = passage.split(',').next().unwrap(); 
+    let i = ImportantExcerpt {
+        part: some_words
+    };
+}
+</code></pre>
+<p>
+  Here, we create a reference type (<code class="inline-code">&ampstr</code>), 
+  and pass it to the ImportantExcerpt struct. The struct goes out of scope 
+  before the owned data (Rust's drop order rules work as first in last out), 
+  so the code is valid.
+</p>
+<h2>Lifetime Elision</h2>
+<div class="quote-wrapper">
+  <blockquote>
+    In early versions (pre-1.0) of Rust, this code wouldn’t have compiled 
+    because every reference needed an explicit lifetime. At that time, the 
+    function signature would have been written like this:
+    <pre><code class="language-rust">fn first_word&lt'a&gt(s: &amp'a str) -&gt &amp'a str {
+    </code></pre>
+    After writing a lot of Rust code, the Rust team found that Rust 
+    programmers were entering the same lifetime annotations over and over in 
+    particular situations. These situations were predictable and followed a 
+    few deterministic patterns. The developers programmed these patterns into 
+    the compiler’s code so the borrow checker could infer the lifetimes in 
+    these situations and wouldn’t need explicit annotations. This piece of 
+    Rust history is relevant because it’s possible that more deterministic 
+    patterns will emerge and be added to the compiler. In the future, even 
+    fewer lifetime annotations might be required. The patterns programmed 
+    into Rust’s analysis of references are called the lifetime elision rules. 
+    These aren’t rules for programmers to follow; they’re a set of particular 
+    cases that the compiler will consider, and if your code fits these cases, 
+    you don’t need to write the lifetimes explicitly.
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch10-03-lifetime-syntax.html#lifetime-elision" class="quote-src">
+    -- The Book: Chapter 10.3
+  </a>
+</div>
+<p>
+  The compiler uses three rules to figure out the lifetimes of the references 
+  when there aren’t explicit annotations. The first rule applies to input 
+  lifetimes, and the second and third rules apply to output lifetimes 
+</p>
+<h4>Lifetime Elision Rule #1</h4>
+<ol>
+  <li>
+    The function fn foo(x: &ampi32) would get one lifetime parameter and 
+    become <code class="inline-code">fn foo&lt'a&gt(x: &amp'a i32)</code>.
+  </li>
+  <li> 
+    The function fn foo(x: &ampi32, y: &ampi32) would get two lifetime 
+    parameters and become fn foo&lt'a, 'b&gt(x: &amp'a i32, y: &amp'b i32).
+  </li>
+  <li>
+    The function 
+    <code class="inline-code">fn foo(x: &ampImportantExcerpt)</code> would 
+    get two lifetime parameters and become 
+    <code class="inline-code">fn foo&lt'a, 'b&gt(x: &amp'a ImportantExcerpt&lt'b&gt)</code>
+  </li>
+</ol>
+<h4>Lifetime Elision Rule #2</h4>
+<p>
+  The second rule is that, if there is exactly one input lifetime parameter, 
+  that lifetime is assigned to all output lifetime parameters: 
+</p>
+<pre><code class="language-rust">fn foo<'a>(x: &'a i32) -> &'a i32.
+</code></pre>
+<h4>Lifetime Elision Rule #3</h4>
+<p>  
+  The third rule is that, if there are multiple input lifetime parameters, 
+  but one of them is &ampself or &ampmut self because this is a method, the 
+  lifetime of self is assigned to all output lifetime parameters. This third 
+  rule makes methods much nicer to read and write because fewer symbols are 
+  necessary.
+</p>
+<h2>Lifetime Annotations in Method Definitions</h2>
+<p>
+  Lifetimes in method definitions depend on whether the lifetimes are related 
+  to the struct fields, or the input parameters and return types themselves 
+</p>
+<h2>Static Lifetimes</h2>
+<p>
+  A static lifetime quite simply means that the data can live for the entire 
+  duration of the program, and it's annotated with 
+  <code class="inline-code">'static</code> 
+</p>
+<h2>Generic Type Parameters, Trait Bounds, and Lifetimes Together</h2>
+<p>
+  The code block below shows how to define generic types, trait bounds, and
+  life times all in one function
+</p>
+<pre><code class="language-rust">use std::fmt::Display;
+
+fn longest_with_an_announcement&lt'a, T&gt(
+    x: &amp'a str,
+    y: &amp'a str,
+    ann: T,
+) -&gt &amp'a str
+where
+    T: Display,
+{
+    println!("Announcement! {ann}");
+    if x.len() &gt y.len() { x } else { y }
+}
+</code></pre>
+<p>
+  This is the longest function that returns the longer of two string slices. 
+  But now it has an extra parameter named ann of the generic type 
+  <code class="inline-code">T</code>, which can be filled in by any type that 
+  implements the <code class="inline-code">Display</code> trait as specified 
+  by the where clause. This extra parameter will be printed using 
+  <code class="inline-code">{}</code>, which is why the Display trait bound is 
+  necessary. Because lifetimes are a type of generic, the declarations of the 
+  lifetime parameter <code class="inline-code">'a</code> and the generic type 
+  parameter <code class="inline-code">T</code> go in the same list inside the 
+  angle brackets after the function name.
+</p>
+<div class="quote-wrapper">
+  <blockquote>
+    <h2>Summary</h2>
+    <p>
+      We covered a lot in this chapter! Now that you know about generic type 
+      parameters, traits and trait bounds, and generic lifetime parameters, 
+      you’re ready to write code without repetition that works in many 
+      different situations. Generic type parameters let you apply the code to 
+      different types. Traits and trait bounds ensure that even though the 
+      types are generic, they’ll have the behavior the code needs. You 
+      learned how to use lifetime annotations to ensure that this flexible 
+      code won’t have any dangling references. And all of this analysis 
+      happens at compile time, which doesn’t affect runtime performance!
+    </p>
+    <p>
+      Believe it or not, there is much more to learn on the topics we 
+      discussed in this chapter: Chapter 18 discusses trait objects, which 
+      are another way to use traits. There are also more complex scenarios 
+      involving lifetime annotations that you will only need in very advanced 
+      scenarios; for those, you should read the Rust Reference. But next, 
+      you’ll learn how to write tests in Rust so you can make sure your code 
+      is working the way it should. 
+    </p>
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch10-03-lifetime-syntax.html#summary" class="quote-src">
+    -- The Book: Chapter 10.3
+  </a>
+</div>
+
+
+

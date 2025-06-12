@@ -1,0 +1,128 @@
+<h1>Writing Automated Tests</h1>
+<p>
+  Rust supports writing automated tests for testing program correctness. 
+</p>
+<h3>How to Write Tests</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    <p>
+      Tests are Rust functions that verify that the non-test code is 
+      functioning in the expected manner. The bodies of test functions 
+      typically perform these three actions:
+    </p>
+    <ol>
+      <li>Set up any needed data or state.</li>
+      <li>Run the code you want to test.</li>
+      <li>Assert that the results are what you expect.</li>
+    </ol>
+    <p>
+      Let’s look at the features Rust provides specifically for writing tests 
+      that take these actions, which include the test attribute, a few macros, 
+      and the should_panic attribute.
+    </p>
+  </blockquote>
+  <a href="https://www.youtube.com/watch?v=yEE7XDJO24M&list=TLPQMTAwNjIwMjXjY03V2Y1D1w&index=2" class="quote-src">
+    -- The Book: Chapter 11.1
+  </a>
+</div>
+<h3>The Anatomy of a Test Function</h3>
+<div class="quote-wrapper">
+  <blockquote>
+    At its simplest, a test in Rust is a function that’s annotated with the 
+    test attribute. Attributes are metadata about pieces of Rust code; one 
+    example is the derive attribute we used with structs in Chapter 5. To 
+    change a function into a test function, add #[test] on the line before fn. 
+    When you run your tests with the cargo test command, Rust builds a test 
+    runner binary that runs the annotated functions and reports on whether 
+    each test function passes or fails.
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch11-01-writing-tests.html#the-anatomy-of-a-test-function" class="quote-src">
+    -- The Book: Chapter
+  </a>
+</div>
+<p>
+  The source code block at the bottom of this page demonstrates how to create 
+  a unit test, and run it. Notice how the 
+  <code class="inline-code">it_works()</code> function has the 
+  <code class="inline-code">#[test]</code> line above the function signature.
+  Running <code class="inline-code">cargo test</code> will automatically run
+  the functions defined with that macro.
+</p>
+<p>
+  Running <code class="inline-code">cargo test</code> will run all test 
+  functions with the <code class="inline-code">#[test]</code> macro, but what 
+  if you only want to run certain tests? This is also possible, and is known 
+  as <i>filtering</i>, but we'll talk about that later.
+</p>
+<h3>Adding Custom Failure Messages</h3>
+<p>
+  You can add custom failure messages by adding a string as a second argument
+  to the <code class="inline-code language-rust">assert!</code> macro.
+</p>
+<pre><code class="language-rust">#[test]
+fn greeting_contains_name() {
+    let result = greeting("Carol");
+    assert!(
+        result.contains("Carol"),
+        "Greeting did not contain name, value was `{result}`"
+    );
+}
+</code></pre>
+<h3>Checking for Panics with should_panic</h3>
+<p>
+  Sometimes you expect that a test should fail. If a test panics, and that's 
+  what you want, then you need to use the 
+  <code class="inline-code">#[should_panic]</code> macro.
+</p>
+
+
+<pre><code class="language-rust">fn adder(num_1: i32, num_2: i32) -&gt i32 {
+    num_1 + num_2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let output = adder(2, 2);    
+        assert_eq!(output, 4); 
+    }
+}
+
+pub fn run() {
+    println!("-- Auto Test Modules --");
+    println!("Run 'cargo test' to get the intended output of this module")
+}
+</code></pre>
+
+<h2>Controlling How Tests are Run</h2>
+<div class="quote-wrapper">
+  <blockquote>
+    <p> 
+      Just as cargo run compiles your code and then runs the resultant binary, 
+      cargo test compiles your code in test mode and runs the resultant test 
+      binary. The default behavior of the binary produced by cargo test is to 
+      run all the tests in parallel and capture output generated during test 
+      runs, preventing the output from being displayed and making it easier to 
+      read the output related to the test results. You can, however, specify 
+      command line options to change this default behavior. 
+    </p>
+    <p>
+      Some command line options go to cargo test, and some go to the 
+      resultant test binary. To separate these two types of arguments, you 
+      list the arguments that go to cargo test followed by the separator 
+      <code class="inline-code">--</code> and then the ones that go to the 
+      test binary. Running <code class="inline-code">cargo test --help</code> 
+      displays the options you can use with cargo test, and running 
+      <code class="inline-code">cargo test -- --help</code> displays the 
+      options you can use after the separator. 
+    </p>
+  </blockquote>
+  <a href="https://rust-book.cs.brown.edu/ch11-02-running-tests.html" class="quote-src">
+    -- The Book: Chapter 11.2
+  </a>
+</div>
+
+
